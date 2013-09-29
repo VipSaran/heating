@@ -21,21 +21,50 @@ app.configure(function() {
   rrdb_tools.init();
 
   initTimers();
-});
-
-app.get('/set/:value', function(req, res) {
-  console.log('/set/' + req.params.value);
-  gpio_tools.setValue(req.params.value * 1, function() {
-    res.send(inputs[0]);
+  rrdb_tools.getLastTempPreset(function(value) {
+    last_temp_preset = value;
   });
 });
 
-app.get('/get', function(req, res) {
-  console.log('/get');
+app.get('/set_heating/:value', function(req, res) {
+  console.log('/set_heating/' + req.params.value);
+
+  // set heating (heat+pump) state to value
+  // 1: heat(1), pump(1)
+  // 0: heat(0), sleep(5min), pump(0)
+
+  // gpio_tools.setValue(req.params.value * 1, function() {
+  //   res.send(inputs[0]);
+  // });
+});
+
+app.get('/get_heating', function(req, res) {
+  console.log('/get_heating');
+
+  // get current heating state
+  res.send(1);
+
+  // gpio_tools.getValue(function(value) {
+  //   inputs[0].value = value;
+  //   console.log('inputs[0].value=' + inputs[0].value);
+  //   res.send(inputs[0]);
+  // });
+});
+
+app.get('/get_temp_preset', function(req, res) {
+  console.log('/get_temp_preset');
+
   gpio_tools.getValue(function(value) {
     inputs[0].value = value;
     console.log('inputs[0].value=' + inputs[0].value);
     res.send(inputs[0]);
+  });
+});
+
+app.get('/refresh_image', function(req, res) {
+  console.log('/refresh_image');
+  rrdb_tools.paint(function(updated) {
+    res.send(updated);
   });
 });
 
@@ -80,7 +109,7 @@ function initTimers() {
   }, 120000); // 120.000 = 2 min
 }
 
-var set_temp = 22;
+var last_temp_preset = 0;
 var last_temp_living = 0;
 var last_temp_osijek = 0;
 
@@ -102,7 +131,7 @@ function collectAndRecordCurrTemps() {
     console.log('temp_living=' + last_temp_living);
     console.log('temp_osijek=' + last_temp_osijek);
 
-    rrdb_tools.insert(ts, last_temp_living, last_temp_osijek);
+    rrdb_tools.insert(ts, last_temp_preset, last_temp_living, last_temp_osijek);
   })
 
 }

@@ -7,9 +7,10 @@
   <meta name="author" content="">
   <!-- <link rel="shortcut icon" href="../../assets/ico/favicon.png">
   -->
-  <title>Bootstrap</title>
+  <title>Grijanje</title>
 
   <link href="assets/css/bootstrap.css" rel="stylesheet">
+  <link href="assets/css/onoffswitch.css" rel="stylesheet">
   <!-- <link href="css/jumbotron.css" rel="stylesheet">
   -->
   <link href="assets-local/css/local.css" rel="stylesheet">
@@ -24,15 +25,32 @@
 <body>
   <div id="wrap">
     <div class="container">
-      <h1>Hello World!</h1>
-      <p>
-        <a class="btn btn-default" href="#">View details &raquo;</a>
-      </p>
-      <div class="btn-group" data-toggle="buttons">
-        <label class="btn btn-success">
-          <input type="radio" name="options" id="option1">On</label>
-        <label class="btn btn-danger">
-          <input type="radio" name="options" id="option2">Off</label>
+      <div id="temperatures_graph">
+        <img src="assets-local/img/temperatures_graph.png" />
+      </div>
+      <div class="row">
+        <div class="col-md-4">.col-md-4</div>
+        <div class="col-md-4">.col-md-4</div>
+        <div class="col-md-4">
+          .col-md-4
+          <a class="btn btn-default" href="#">+ 1&deg;C</a>
+          <a class="btn btn-default" href="#">- 1&deg;C</a>
+        </div>
+      </div>
+      <div class="row">
+        <div class="onoffswitch">
+          <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="myonoffswitch">
+          <label class="onoffswitch-label" for="myonoffswitch">
+            <div class="onoffswitch-inner">
+              <div class="onoffswitch-active">
+                <div class="onoffswitch-switch">ON</div>
+              </div>
+              <div class="onoffswitch-inactive">
+                <div class="onoffswitch-switch">OFF</div>
+              </div>
+            </div>
+          </label>
+        </div>
       </div>
     </div>
   </div>
@@ -45,5 +63,6 @@
 
   <script src="assets/js/jquery-1.10.2.min.js"></script>
   <script src="assets/js/bootstrap.min.js"></script>
+  <script src="assets-local/js/myclient.js"></script>
 </body>
 </html>

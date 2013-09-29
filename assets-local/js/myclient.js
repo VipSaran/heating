@@ -1,27 +1,31 @@
 $('#myonoffswitch').click(function() {
   var state = getSwitchBinaryState();
-  var url = document.URL + 'set/' + state;
+  var url = document.URL + 'set_heating/' + state;
   console.log('URL=' + url);
   $.getJSON(url, function(data) {
-    console.log('set API response received');
-    $('#output').append('<p>' + new Date().toLocaleString() + ': state changed to ' + state + '.</p>');
-    updateLED();
+    console.log('/set_heating API response received');
   });
 });
 
-var updateLED = function(initial) {
-  var url = document.URL + 'get';
+var updateSwitchState = function() {
+  var url = document.URL + 'get_heating';
   console.log('URL=' + url);
-  $.getJSON(url, function(data) {
-    console.log('get API response received: ' + data['value']);
-    if (data['value'] == 1) {
-      $('#led').addClass('on');
-      if (initial) {
-        $("input#myonoffswitch").prop('checked', true);
-      }
-    } else {
-      $('#led').removeClass('on');
+  $.getJSON(url, function(state) {
+    console.log('/get_heating API response received: ' + state);
+    if (state) {
+      $("#temperatures_graph").html($("<img />", {
+        src: "assets-local/img/temperatures_graph.png"
+      }));
     }
+  });
+}
+
+var refreshImage = function() {
+  var url = document.URL + 'refresh_image';
+  console.log('URL=' + url);
+  $.getJSON(url, function(updated) {
+    console.log('/refresh_image API response received: ' + updated);
+    $("input#myonoffswitch").prop('checked', state);
   });
 }
 
@@ -33,6 +37,17 @@ var isSwitchOn = function() {
   return $("input#myonoffswitch").is(":checked");
 }
 
+var imgRefreshInterval;
 $(document).ready(function() {
-  updateLED(true);
+
+  updateSwitchState();
+
+  refreshImage();
+  imgRefreshInterval = setInterval(function() {
+    refreshImage();
+  }, 300000); // 300.000 = 300 s = 5 min
+
+  $("#temperatures_graph img").click(function() {
+    refreshImage();
+  });
 });
