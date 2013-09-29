@@ -12,11 +12,7 @@ var updateSwitchState = function() {
   console.log('URL=' + url);
   $.getJSON(url, function(state) {
     console.log('/get_heating API response received: ' + state);
-    if (state) {
-      $("#temperatures_graph").html($("<img />", {
-        src: "assets-local/img/temperatures_graph.png"
-      }));
-    }
+    $("input#myonoffswitch").prop('checked', state);
   });
 }
 
@@ -25,7 +21,11 @@ var refreshImage = function() {
   console.log('URL=' + url);
   $.getJSON(url, function(updated) {
     console.log('/refresh_image API response received: ' + updated);
-    $("input#myonoffswitch").prop('checked', state);
+    if (updated) {
+      $("#temperatures_graph").html($("<img />", {
+        src: "assets-local/img/temperatures_graph.png"
+      }));
+    }
   });
 }
 

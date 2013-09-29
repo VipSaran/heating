@@ -66,13 +66,17 @@ var getLastTempPreset = function(cb) {
     //  temp_preset temp_living temp_osijek
     //
     //1380478323: 24 24 10.2
+    //
 
     try {
       var lines = out.replace(/\r\n/g, "\n").split("\n");
-      var tabs = lines[lines.length - 1].split(" ");
-      var temp = tabs[1]
+      var tabs = lines[2].split(" ");
+      var temp = tabs[1];
       console.log("parsing result: " + temp);
       if (typeof(cb) == "function") {
+        if (temp == undefined || temp == "undefined") {
+          temp = defaultTempPreset;
+        }
         cb(temp);
       }
 
@@ -114,9 +118,9 @@ var paint = function(cb) {
     '--vertical-label "C" --border 0 --zoom 2 --slope-mode ' +
     '--color CANVAS#FFFFFF00 --color FRAME#000000FF --color BACK#FFFFFF00 ' +
     'TEXTALIGN:center ' +
-    'DEF:mytemp_preset=heating.rrd:temp_preset:AVERAGE ' +
-    'DEF:mytemp_living=heating.rrd:temp_living:AVERAGE ' +
-    'DEF:mytemp_osijek=heating.rrd:temp_osijek:AVERAGE ' +
+    'DEF:mytemp_preset=' + app_dir + "/" + rrd_name + ':temp_preset:AVERAGE ' +
+    'DEF:mytemp_living=' + app_dir + "/" + rrd_name + ':temp_living:AVERAGE ' +
+    'DEF:mytemp_osijek=' + app_dir + "/" + rrd_name + ':temp_osijek:AVERAGE ' +
     'LINE:mytemp_preset#2CA02C:"zadano" ' +
     'LINE:mytemp_living#D62728:"dnevna soba" ' +
     'LINE:mytemp_osijek#1F77B4:"Osijek"';

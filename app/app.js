@@ -42,7 +42,7 @@ app.get('/get_heating', function(req, res) {
   console.log('/get_heating');
 
   // get current heating state
-  res.send(1);
+  res.send(true);
 
   // gpio_tools.getValue(function(value) {
   //   inputs[0].value = value;
