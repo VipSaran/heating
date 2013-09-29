@@ -85,7 +85,7 @@ var last_temp_living = 0;
 var last_temp_osijek = 0;
 
 function collectAndRegulateTemp() {
-  console.log('collectAndRecordCurrTemps()');
+  console.log('collectAndRegulateTemp()');
 
   // gpio_tools.getValue(function(value) {
   var last_temp_living = randomFromInterval(20, 26);
