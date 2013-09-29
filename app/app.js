@@ -88,7 +88,7 @@ function collectAndRegulateTemp() {
   console.log('collectAndRegulateTemp()');
 
   // gpio_tools.getValue(function(value) {
-  var last_temp_living = randomFromInterval(20, 26);
+  last_temp_living = randomFromInterval(20, 26);
   // });
 }
 
@@ -98,7 +98,7 @@ function collectAndRecordCurrTemps() {
 
   weather_tools.getTemp(function(value) {
     last_temp_osijek = value;
-    
+
     console.log('temp_living=' + last_temp_living);
     console.log('temp_osijek=' + last_temp_osijek);
 
