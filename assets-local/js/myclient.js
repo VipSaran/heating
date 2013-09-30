@@ -17,6 +17,12 @@ var updateSwitchState = function() {
 }
 
 var refreshImage = function() {
+  $('#progress').modal({
+    show: true,
+    keyboard: false,
+    backdrop: true
+  });
+
   var url = document.URL + 'refresh_image';
   console.log('URL=' + url);
   $.getJSON(url, function(updated) {
@@ -25,6 +31,13 @@ var refreshImage = function() {
       $("#temperatures_graph").html($("<img />", {
         src: "assets-local/img/temperatures_graph.png"
       }));
+      $('#log').html('Posljednji puta osvježeno: ' + new Date().toLocaleString());
+      $('#progress').modal('hide');
+    } else {
+      setTimeout(function() {
+        $('#progress').modal('hide');
+      }, 500);
+      $('#log').html('Posljednji puta osvježeno: ' + new Date().toLocaleString());
     }
   });
 }

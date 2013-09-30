@@ -24,7 +24,18 @@
 
 <body>
   <div id="wrap">
-    <div class="container">
+    <div class="container fill">
+
+      <div class="modal fade" id="progress" tabindex="-1" role="dialog" aria-labelledby="progressLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-body">
+              Loading…
+              <img src="assets-local/img/waiting.gif"></div>
+          </div>
+        </div>
+      </div>
+
       <div id="temperatures_graph">
         <img src="assets-local/img/temperatures_graph.png" />
       </div>
@@ -57,7 +68,7 @@
 
   <div id="footer">
     <div class="container">
-      <p>Updated: now!</p>
+      <div id="log"></div>
     </div>
   </div>
 
