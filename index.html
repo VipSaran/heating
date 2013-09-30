@@ -40,17 +40,30 @@
         <img src="assets-local/img/temperatures_graph.png" />
       </div>
       <div class="row">
-        <div class="col-md-4">.col-md-4</div>
-        <div class="col-md-4">.col-md-4</div>
         <div class="col-md-4">
-          .col-md-4
-          <a class="btn btn-default" href="#">+ 1&deg;C</a>
-          <a class="btn btn-default" href="#">- 1&deg;C</a>
+          Osijek:
+          <div class="temp_readout temp_osijek">
+            <span id="temp_osijek">11</span>&deg;C
+          </div>
+        </div>
+        <div class="col-md-4">
+          zadano:
+          <div class="temp_readout temp_preset">
+            <a class="btn btn-default" href="#">- 1&deg;C</a>
+            <span id="temp_preset">24</span>&deg;C
+            <a class="btn btn-default" href="#">+ 1&deg;C</a>
+          </div>
+        </div>
+        <div class="col-md-4">
+          dnevna:
+          <div class="temp_readout temp_living">
+            <span id="temp_living">23</span>&deg;C
+          </div>
         </div>
       </div>
       <div class="row">
         <div class="onoffswitch">
-          <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="myonoffswitch">
+          <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="myonoffswitch" checked="checked">
           <label class="onoffswitch-label" for="myonoffswitch">
             <div class="onoffswitch-inner">
               <div class="onoffswitch-active">

@@ -6,23 +6,30 @@ var rrdb_tools = require('./rrdb-tools');
 
 var app = express();
 
-var inputs = [{
-  pin: '11',
-  gpio: '17',
-  value: 0
-}];
+// var inputs = [{
+//   pin: '11',
+//   gpio: '17',
+//   value: 0
+// }];
+
+var last_temp_preset = 0;
+var last_temp_living = 0;
+var last_temp_osijek = 0;
+
 
 app.configure(function() {
   app.use(express.favicon());
   app.use(express['static'](__dirname + '/../'));
 
-  gpio_tools.init(inputs[0].pin);
+  // gpio_tools.init(inputs[0].pin);
 
   rrdb_tools.init();
 
   initTimers();
-  rrdb_tools.getLastTempPreset(function(value) {
-    last_temp_preset = value;
+  rrdb_tools.getLastTemps(function(data) {
+    last_temp_preset = data.temp_preset;
+    last_temp_living = data.temp_living;
+    last_temp_osijek = data.temp_osijek;
   });
 });
 
@@ -51,14 +58,15 @@ app.get('/get_heating', function(req, res) {
   // });
 });
 
-app.get('/get_temp_preset', function(req, res) {
-  console.log('/get_temp_preset');
+app.get('/get_temps', function(req, res) {
+  console.log('/get_temps');
 
-  gpio_tools.getValue(function(value) {
-    inputs[0].value = value;
-    console.log('inputs[0].value=' + inputs[0].value);
-    res.send(inputs[0]);
-  });
+  var temps = {
+    "temp_preset": last_temp_preset,
+    "temp_living": last_temp_living,
+    "temp_osijek": last_temp_osijek
+  };
+  res.send(temps);
 });
 
 app.get('/refresh_image', function(req, res) {
@@ -108,10 +116,6 @@ function initTimers() {
     collectAndRecordCurrTemps();
   }, 120000); // 120.000 = 2 min
 }
-
-var last_temp_preset = 0;
-var last_temp_living = 0;
-var last_temp_osijek = 0;
 
 function collectAndRegulateTemp() {
   console.log('collectAndRegulateTemp()');

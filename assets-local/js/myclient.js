@@ -1,3 +1,6 @@
+var lastRefreshed = new Date().toLocaleString(); // fresh temp readout or fresh graph
+var dataRefreshInterval;
+
 $('#myonoffswitch').click(function() {
   var state = getSwitchBinaryState();
   var url = document.URL + 'set_heating/' + state;
@@ -31,14 +34,36 @@ var refreshImage = function() {
       $("#temperatures_graph").html($("<img />", {
         src: "assets-local/img/temperatures_graph.png"
       }));
-      $('#log').html('Posljednji puta osvježeno: ' + new Date().toLocaleString());
+      lastRefreshed = new Date().toLocaleString();
       $('#progress').modal('hide');
     } else {
       setTimeout(function() {
         $('#progress').modal('hide');
       }, 500);
-      $('#log').html('Posljednji puta osvježeno: ' + new Date().toLocaleString());
     }
+    $('#log').html('Posljednji puta osvježeno: ' + lastRefreshed);
+  });
+}
+
+var refreshTemps = function() {
+  $('#progress').modal({
+    show: true,
+    keyboard: false,
+    backdrop: true
+  });
+
+  var url = document.URL + 'get_temps';
+  console.log('URL=' + url);
+  $.getJSON(url, function(data) {
+    console.log('/get_temps API response received: ' + data);
+
+    $("#temp_osijek").html(data.temp_osijek);
+    $("#temp_preset").html(data.temp_preset);
+    $("#temp_living").html(data.temp_living);
+
+    lastRefreshed = new Date().toLocaleString();
+    $('#progress').modal('hide');
+    $('#log').html('Posljednji puta osvježeno: ' + lastRefreshed);
   });
 }
 
@@ -50,14 +75,16 @@ var isSwitchOn = function() {
   return $("input#myonoffswitch").is(":checked");
 }
 
-var imgRefreshInterval;
-$(document).ready(function() {
 
+$(document).ready(function() {
   updateSwitchState();
 
   refreshImage();
-  imgRefreshInterval = setInterval(function() {
+  refreshTemps();
+  
+  dataRefreshInterval = setInterval(function() {
     refreshImage();
+    refreshTemps();
   }, 300000); // 300.000 = 300 s = 5 min
 
   $("#temperatures_graph img").click(function() {

@@ -51,8 +51,8 @@ var init = function() {
 }
 
 var defaultTempPreset = 23;
-var getLastTempPreset = function(cb) {
-  console.log("rrdb-tools.getLastTempPreset()");
+var getLastTemps = function(cb) {
+  console.log("rrdb-tools.getLastTemps()");
 
   var lastUpdateStr = "rrdtool lastupdate " + app_dir + "/" + rrd_name;
 
@@ -71,19 +71,19 @@ var getLastTempPreset = function(cb) {
     try {
       var lines = out.replace(/\r\n/g, "\n").split("\n");
       var tabs = lines[2].split(" ");
-      var temp = tabs[1];
-      console.log("parsing result: " + temp);
+      var temps = tabs.splice(0, 1);
+      console.log("parsing result: " + temps);
       if (typeof(cb) == "function") {
-        if (temp == undefined || temp == "undefined") {
-          temp = defaultTempPreset;
+        if (temps == undefined || temps == "undefined") {
+          temps = [defaultTempPreset, 0, 0];
         }
-        cb(temp);
+        cb(temps);
       }
 
     } catch (err) {
       console.log("Parsing error: " + err);
       if (typeof(cb) == "function") {
-        cb(defaultTempPreset);
+        cb([defaultTempPreset, 0, 0]);
       }
     }
   });
@@ -121,9 +121,10 @@ var paint = function(cb) {
     'DEF:mytemp_preset=' + app_dir + "/" + rrd_name + ':temp_preset:AVERAGE ' +
     'DEF:mytemp_living=' + app_dir + "/" + rrd_name + ':temp_living:AVERAGE ' +
     'DEF:mytemp_osijek=' + app_dir + "/" + rrd_name + ':temp_osijek:AVERAGE ' +
+    'LINE:mytemp_osijek#1F77B4:"Osijek" ' +
     'LINE:mytemp_preset#2CA02C:"zadano" ' +
-    'LINE:mytemp_living#D62728:"dnevna soba" ' +
-    'LINE:mytemp_osijek#1F77B4:"Osijek"';
+    'LINE:mytemp_living#D62728:"dnevna soba"';
+    
 
   execute(graphStr, function(out, err) {
     if (err) throw err;
@@ -153,7 +154,7 @@ var getImageName = function() {
 
 
 exports.init = init;
-exports.getLastTempPreset = getLastTempPreset;
+exports.getLastTemps = getLastTemps;
 exports.insert = insert;
 exports.paint = paint;
 exports.getImageName = getImageName;
