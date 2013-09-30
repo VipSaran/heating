@@ -43,21 +43,21 @@
         <div class="col-md-4">
           Osijek:
           <div class="temp_readout temp_osijek">
-            <span id="temp_osijek">11</span>&deg;C
+            <span id="temp_osijek">&nbsp;&nbsp;</span>&deg;C
           </div>
         </div>
         <div class="col-md-4">
           zadano:
           <div class="temp_readout temp_preset">
-            <a class="btn btn-default" href="#">- 1&deg;C</a>
-            <span id="temp_preset">24</span>&deg;C
-            <a class="btn btn-default" href="#">+ 1&deg;C</a>
+            <a class="btn btn-default" id="temp_preset_dec">- 1&deg;C</a>
+            <span id="temp_preset">&nbsp;&nbsp;</span>&deg;C
+            <a class="btn btn-default" id="temp_preset_inc">+ 1&deg;C</a>
           </div>
         </div>
         <div class="col-md-4">
           dnevna:
           <div class="temp_readout temp_living">
-            <span id="temp_living">23</span>&deg;C
+            <span id="temp_living">&nbsp;&nbsp;</span>&deg;C
           </div>
         </div>
       </div>
@@ -87,6 +87,7 @@
 
   <script src="assets/js/jquery-1.10.2.min.js"></script>
   <script src="assets/js/bootstrap.min.js"></script>
+  <script src="assets/js/json2.js"></script>
   <script src="assets-local/js/myclient.js"></script>
 </body>
 </html>

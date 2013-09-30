@@ -32,13 +32,16 @@ var setValue = function(value, cb) {
   });
 }
 
-var exitGracefully = function() {
+var exitGracefully = function(cb) {
   console.log('gpio-tools.exitGracefully()');
   gpio.write(pin, 0, function(err) {
     if (err) throw err;
     gpio.close(pin); // then close pin 11
     console.log('Closed the GPIO pin ' + pin);
-    process.exit(0); // and terminate the program
+    
+    if (typeof(cb) == "function") {
+      cb();
+    }
   });
 }
 

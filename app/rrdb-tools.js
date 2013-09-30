@@ -50,7 +50,8 @@ var init = function() {
   }
 }
 
-var defaultTempPreset = 23;
+// Should be called only at application start.
+// Later, live values are taken directly from the app context.
 var getLastTemps = function(cb) {
   console.log("rrdb-tools.getLastTemps()");
 
@@ -68,14 +69,26 @@ var getLastTemps = function(cb) {
     //1380478323: 24 24 10.2
     //
 
+    var temps;
     try {
       var lines = out.replace(/\r\n/g, "\n").split("\n");
+
       var tabs = lines[2].split(" ");
-      var temps = tabs.splice(0, 1);
-      console.log("parsing result: " + temps);
+      console.log("tabs: " + tabs);
+
+      temps = {
+        "temp_preset": tabs[1],
+        "temp_living": tabs[2],
+        "temp_osijek": tabs[3]
+      };
+
       if (typeof(cb) == "function") {
         if (temps == undefined || temps == "undefined") {
-          temps = [defaultTempPreset, 0, 0];
+          temps = {
+            "temp_preset": 23,
+            "temp_living": 0,
+            "temp_osijek": 0
+          };
         }
         cb(temps);
       }
@@ -83,7 +96,12 @@ var getLastTemps = function(cb) {
     } catch (err) {
       console.log("Parsing error: " + err);
       if (typeof(cb) == "function") {
-        cb([defaultTempPreset, 0, 0]);
+        temps = {
+          "temp_preset": 23,
+          "temp_living": 0,
+          "temp_osijek": 0
+        };
+        cb(temps);
       }
     }
   });
@@ -124,7 +142,7 @@ var paint = function(cb) {
     'LINE:mytemp_osijek#1F77B4:"Osijek" ' +
     'LINE:mytemp_preset#2CA02C:"zadano" ' +
     'LINE:mytemp_living#D62728:"dnevna soba"';
-    
+
 
   execute(graphStr, function(out, err) {
     if (err) throw err;

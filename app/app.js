@@ -58,6 +58,23 @@ app.get('/get_heating', function(req, res) {
   // });
 });
 
+app.get('/set_preset_temp/:value', function(req, res) {
+  console.log('/set_preset_temp/' + req.params.value);
+
+  if (req.params.value == 'dec') {
+    last_temp_preset--;
+  } else {
+    last_temp_preset++;
+  }
+
+  var temps = {
+    "temp_preset": last_temp_preset,
+    "temp_living": last_temp_living,
+    "temp_osijek": last_temp_osijek
+  };
+  res.send(temps);
+});
+
 app.get('/get_temps', function(req, res) {
   console.log('/get_temps');
 
@@ -99,7 +116,9 @@ process.on('SIGINT', function() {
   clearInterval(tempRegulateInterval);
   clearInterval(tempCollectInterval);
 
-  gpio_tools.exitGracefully();
+  gpio_tools.exitGracefully(function() {
+    process.exit(0); // and terminate the program
+  });
 });
 
 var tempRegulateInterval;
