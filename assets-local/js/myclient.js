@@ -70,10 +70,14 @@ var updateSwitchState = function() {
 
 var setSwitchState = function() {
   var state = getSwitchBinaryState();
+  console.log('state=' + state);
+//   state = (state - 1) * -1;
+// console.log('state2=' + state);
   var url = document.URL + 'set_heating/' + state;
   console.log('URL=' + url);
   $.getJSON(url, function(data) {
     console.log('/set_heating API response received');
+    $("input#myonoffswitch").prop('checked', state);
   });
 }
 
@@ -107,7 +111,9 @@ $(document).ready(function() {
     setPresetTemp('inc');
   });
 
-  $('#myonoffswitch').click(function() {
+  $('#myonoffswitch').on("click", function(event) {
+    console.log("click3");
+    event.preventDefault();
     setSwitchState();
   });
 });

@@ -41,6 +41,8 @@ var auth = express.basicAuth(function(user, pass, callback) {
 app.get('/set_heating/:value', auth, function(req, res) {
   console.log('/set_heating/' + req.params.value);
 
+  res.send(true);
+
   // set heating (heat+pump) state to value
   // 1: heat(1), pump(1)
   // 0: heat(0), sleep(5min), pump(0)
