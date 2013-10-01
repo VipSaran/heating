@@ -33,7 +33,12 @@ app.configure(function() {
   });
 });
 
-app.get('/set_heating/:value', function(req, res) {
+var auth = express.basicAuth(function(user, pass, callback) {
+  var result = (user === 'test' && pass === 'pass');
+  callback(null /* error */ , result);
+});
+
+app.get('/set_heating/:value', auth, function(req, res) {
   console.log('/set_heating/' + req.params.value);
 
   // set heating (heat+pump) state to value
@@ -58,7 +63,7 @@ app.get('/get_heating', function(req, res) {
   // });
 });
 
-app.get('/set_preset_temp/:value', function(req, res) {
+app.get('/set_preset_temp/:value', auth, function(req, res) {
   console.log('/set_preset_temp/' + req.params.value);
 
   if (req.params.value == 'dec') {
