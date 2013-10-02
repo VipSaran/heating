@@ -26,6 +26,11 @@
   <div id="wrap">
     <div class="container fill">
 
+      <div id="error" class="alert alert-danger hidden fade">
+        <button type="button" id="error_close" class="close">&times;</button>
+        <strong>Greška!</strong> Za odabranu funkciju potrebno je odobrenje.
+      </div>
+
       <div class="modal fade" id="progress" tabindex="-1" role="dialog" aria-labelledby="progressLabel" aria-hidden="true">
         <div class="modal-dialog">
           <div class="modal-content">
@@ -43,21 +48,24 @@
         <div class="col-md-4">
           Osijek:
           <div class="temp_readout temp_osijek">
-            <span id="temp_osijek">&nbsp;&nbsp;</span>&deg;C
+            <span id="temp_osijek">&nbsp;&nbsp;</span>
+            &deg;C
           </div>
         </div>
         <div class="col-md-4">
           zadano:
           <div class="temp_readout temp_preset">
             <a class="btn btn-default" id="temp_preset_dec">- 1&deg;C</a>
-            <span id="temp_preset">&nbsp;&nbsp;</span>&deg;C
+            <span id="temp_preset">&nbsp;&nbsp;</span>
+            &deg;C
             <a class="btn btn-default" id="temp_preset_inc">+ 1&deg;C</a>
           </div>
         </div>
         <div class="col-md-4">
           dnevna soba:
           <div class="temp_readout temp_living">
-            <span id="temp_living">&nbsp;&nbsp;</span>&deg;C
+            <span id="temp_living">&nbsp;&nbsp;</span>
+            &deg;C
           </div>
         </div>
       </div>

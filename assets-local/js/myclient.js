@@ -4,7 +4,10 @@ var dataRefreshInterval;
 var refreshImage = function(cb) {
   var url = document.URL + 'refresh_image';
   console.log('URL=' + url);
-  $.getJSON(url, function(updated) {
+  $.ajax({
+    url: url,
+    dataType: "json"
+  }).done(function(updated) {
     console.log('/refresh_image API response received: ' + updated);
     if (updated) {
       $("#temperatures_graph").html($("<img />", {
@@ -22,7 +25,10 @@ var refreshImage = function(cb) {
 var refreshTemps = function() {
   var url = document.URL + 'get_temps';
   console.log('URL=' + url);
-  $.getJSON(url, function(data) {
+  $.ajax({
+    url: url,
+    dataType: "json"
+  }).done(function(data) {
     console.log('/get_temps API response received: ' + JSON.stringify(data));
 
     $("#temp_osijek").html(data.temp_osijek);
@@ -48,7 +54,10 @@ var refreshData = function() {
 var setPresetTemp = function(value) {
   var url = document.URL + 'set_preset_temp/' + value;
   console.log('URL=' + url);
-  $.getJSON(url, function(data) {
+  $.ajax({
+    url: url,
+    dataType: "json"
+  }).done(function(data) {
     console.log('/set_preset_temp API response received');
     $("#temp_osijek").html(data.temp_osijek);
     $("#temp_preset").html(data.temp_preset);
@@ -56,13 +65,19 @@ var setPresetTemp = function(value) {
 
     lastRefreshed = new Date().toLocaleString();
     $('#log').html('Posljednji puta osvježeno: ' + lastRefreshed);
+  }).fail(function(res) {
+    // console.error(res.statusText);
+    $('#error').removeClass('hidden').addClass('in');
   });
 }
 
 var updateSwitchState = function() {
   var url = document.URL + 'get_heating';
   console.log('URL=' + url);
-  $.getJSON(url, function(state) {
+  $.ajax({
+    url: url,
+    dataType: "json"
+  }).done(function(state) {
     console.log('/get_heating API response received: ' + state);
     $("input#myonoffswitch").prop('checked', state);
   });
@@ -70,14 +85,17 @@ var updateSwitchState = function() {
 
 var setSwitchState = function() {
   var state = getSwitchBinaryState();
-  console.log('state=' + state);
-//   state = (state - 1) * -1;
-// console.log('state2=' + state);
   var url = document.URL + 'set_heating/' + state;
   console.log('URL=' + url);
-  $.getJSON(url, function(data) {
+  $.ajax({
+    url: url,
+    dataType: "json"
+  }).done(function(data) {
     console.log('/set_heating API response received');
     $("input#myonoffswitch").prop('checked', state);
+  }).fail(function(res) {
+    // console.error(res.statusText);
+    $('#error').removeClass('hidden').addClass('in');
   });
 }
 
@@ -115,5 +133,10 @@ $(document).ready(function() {
     console.log("click3");
     event.preventDefault();
     setSwitchState();
+  });
+
+  $('#error_close').click(function() {
+    $(this).parent().removeClass('in');
+    $(this).parent().addClass('hidden');
   });
 });
