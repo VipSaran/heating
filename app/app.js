@@ -33,10 +33,40 @@ app.configure(function() {
   });
 });
 
-var auth = express.basicAuth(function(user, pass, callback) {
-  var result = (user === 'test' && pass === 'pass');
-  callback(null /* error */ , result);
-});
+function isFromLAN(ip) {
+  console.log('isFromLAN(' + ip + ')');
+  if (ip === '127.0.0.1') {
+    return true;
+  }
+
+  try {
+    var lastDot = ip.lastIndexOf('.');
+    var first3Octets = ip.substring(0, lastDot);
+    // console.log('first3Octets=' + first3Octets);
+    // var lastOctet = ip.substring(lastDot + 1);
+    // console.log('lastOctet=' + lastOctet);
+    if (first3Octets === '192.168.2') {
+      return true;
+    }
+  } catch (e) {
+    console.error('error: ' + e);
+    return false;
+  }
+}
+
+var basicAuth = express.basicAuth;
+var auth = function(req, res, next) {
+
+  if (isFromLAN(req.ip)) {
+    // console.log('LAN --> no auth needed');
+    next();
+  } else {
+    // console.log(req.ip + ' --> WAN --> auth to pass');
+    basicAuth(function(user, pass, callback) {
+      callback(null, user === 'test' && pass === 'pass');
+    })(req, res, next);
+  }
+}
 
 app.get('/set_heating/:value', auth, function(req, res) {
   console.log('/set_heating/' + req.params.value);
