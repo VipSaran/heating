@@ -1,5 +1,5 @@
-var http = require('http');
 var express = require('express');
+var request = require('request');
 var gpio_tools = require('./gpio-tools');
 var weather_tools = require('./weather-tools');
 var rrdb_tools = require('./rrdb-tools');
@@ -192,8 +192,59 @@ function collectAndRecordCurrTemps() {
     console.log('temp_osijek=' + last_temp_osijek);
 
     rrdb_tools.insert(ts, last_temp_preset, last_temp_living, last_temp_osijek);
-  })
 
+    publishDataOnline();
+  })
+}
+
+function publishDataOnline() {
+  // curl -X POST -H "Content-Type: application/json" -d '{ "feed_id": 43290, "value": 8.1 }' http://api.sen.se/events/?sense_key=6AfdW7DuFCNFzoUEXWYWvQ
+
+  var sense_url = 'http://api.sen.se/events/?sense_key=6AfdW7DuFCNFzoUEXWYWvQ';
+
+  var feed_preset = {
+    "feed_id": 43288,
+    "value": last_temp_preset
+  };
+  var feed_living = {
+    "feed_id": 43289,
+    "value": last_temp_living
+  };
+  var feed_osijek = {
+    "feed_id": 43290,
+    "value": last_temp_osijek
+  };
+
+  request.post({
+    url: sense_url,
+    json: feed_preset
+  }, function(error, response, body) {
+    if (!error && response.statusCode == 200) {
+      console.log(body);
+    } else {
+      console.error(error);
+    }
+  });
+  request.post({
+    url: sense_url,
+    json: feed_living
+  }, function(error, response, body) {
+    if (!error && response.statusCode == 200) {
+      console.log(body);
+    } else {
+      console.error(error);
+    }
+  });
+  request.post({
+    url: sense_url,
+    json: feed_osijek
+  }, function(error, response, body) {
+    if (!error && response.statusCode == 200) {
+      console.log(body);
+    } else {
+      console.error(error);
+    }
+  });
 }
 
 function randomFromInterval(from, to) {
