@@ -44,10 +44,10 @@ function getCachedUser(name) {
   return null;
 }
 
-var checkCredentials = function(user, pass, cb) {
-  console.log("user-tools.checkCredentials(" + user + ", " + pass + ")");
+var checkCredentials = function(name, pass, cb) {
+  // console.log("user-tools.checkCredentials(" + name + ", " + pass + ")");
 
-  var cached = getCachedUser(user);
+  var cached = getCachedUser(name);
   console.log(cached);
   if (cached != null) {
     if (typeof(cb) == "function") {
@@ -62,14 +62,19 @@ var checkCredentials = function(user, pass, cb) {
         }
       }
 
+      var valid = false;
+
       var data = JSON.parse(data_json);
-      console.log(data);
-      console.log("data.username=" + data.username);
-      console.log("data.password=" + data.password);
-
-      var valid = (user == data.username && pass == data.password);
-
-      addCachedUser(user, valid);
+      // console.log(data);
+      for (var i = data.length - 1; i >= 0; i--) {
+        console.log("data[" + i + "].username=" + data[i].username);
+        if (data[i].username === name) {
+          // console.log("data[" + i + "].password=" + data[i].password);
+          valid = (pass == data[i].password);
+          addCachedUser(name, valid);
+          break;
+        }
+      }
 
       if (typeof(cb) == "function") {
         cb(valid);
@@ -79,3 +84,17 @@ var checkCredentials = function(user, pass, cb) {
 }
 
 exports.checkCredentials = checkCredentials;
+
+// checkCredentials("vip_saran", "12pero", function(valid) {
+//   console.log("result: " + valid)
+// });
+// setTimeout(function() {
+//   checkCredentials("vip_saran", "12pero", function(valid) {
+//     console.log("result: " + valid)
+//   });
+// }, 2000);
+// setTimeout(function() {
+//   checkCredentials("test", "pass", function(valid) {
+//     console.log("result: " + valid)
+//   });
+// }, 4000);
