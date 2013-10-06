@@ -1,5 +1,6 @@
 var express = require('express');
 var request = require('request');
+var user_tools = require('./user-tools');
 var gpio_tools = require('./gpio-tools');
 var weather_tools = require('./weather-tools');
 var rrdb_tools = require('./rrdb-tools');
@@ -63,7 +64,9 @@ var auth = function(req, res, next) {
   } else {
     // console.log(req.ip + ' --> WAN --> auth to pass');
     basicAuth(function(user, pass, callback) {
-      callback(null, user === 'test' && pass === 'pass');
+      user_tools.checkCredentials(user, pass, function(valid) {
+        callback(null, valid);
+      });
     })(req, res, next);
   }
 }
