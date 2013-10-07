@@ -179,9 +179,11 @@ function initTimers() {
 function collectAndRegulateTemp() {
   console.log('collectAndRegulateTemp()');
 
-  // gpio_tools.getValue(function(value) {
-  last_temp_living = randomFromInterval(20, 26);
-  // });
+  gpio_tools.getTempLiving(function(value) {
+    last_temp_living = value;
+  });
+
+  // TODO regulate on/off
 }
 
 function collectAndRecordCurrTemps() {
