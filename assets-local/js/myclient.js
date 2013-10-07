@@ -1,5 +1,6 @@
 var lastRefreshed = new Date().toLocaleString(); // fresh temp readout or fresh graph
 var dataRefreshInterval;
+var dataRefreshTimeout;
 
 var refreshImage = function(cb) {
   var url = document.URL + 'refresh_image';
@@ -42,6 +43,11 @@ var refreshTemps = function() {
 }
 
 var refreshData = function() {
+  clearTimeout(dataRefreshTimeout);
+  dataRefreshTimeout = setTimeout(function() {
+    refreshData();
+  }, 300000); // 300.000 = 300 s = 5 min
+
   $('#progress').modal({
     show: true,
     keyboard: false,
@@ -112,10 +118,6 @@ $(document).ready(function() {
   updateSwitchState();
 
   refreshData();
-
-  dataRefreshInterval = setInterval(function() {
-    refreshData();
-  }, 300000); // 300.000 = 300 s = 5 min
 
   $("#temperatures_graph").click(function() {
     refreshData();
