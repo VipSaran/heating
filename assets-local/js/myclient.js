@@ -130,7 +130,6 @@ $(document).ready(function() {
   });
 
   $('#myonoffswitch').on("click", function(event) {
-    console.log("click3");
     event.preventDefault();
     setSwitchState();
   });

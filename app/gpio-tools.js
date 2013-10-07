@@ -32,6 +32,9 @@ var getTempLiving = function(cb) {
     if (err) {
       console.error(err);
       tempLiving = cachedTempLiving;
+    } else if (out == 0 || out == "0") {
+      console.error("Sensor returned 0.");
+      tempLiving = cachedTempLiving;
     } else {
       // console.error("living sensor readout: " + out);
       tempLiving = parseFloat(out).toFixed(1);
