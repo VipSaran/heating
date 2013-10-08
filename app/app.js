@@ -74,28 +74,17 @@ var auth = function(req, res, next) {
 app.get('/set_heating/:value', auth, function(req, res) {
   console.log('/set_heating/' + req.params.value);
 
-  res.send(true);
-
-  // set heating (heat+pump) state to value
-  // 1: heat(1), pump(1)
-  // 0: heat(0), sleep(5min), pump(0)
-
-  // gpio_tools.setValue(req.params.value * 1, function() {
-  //   res.send(inputs[0]);
-  // });
+  gpio_tools.setHeating((req.params.value * 1) == 1, function(state) {
+    res.send(state);
+  });
 });
 
 app.get('/get_heating', function(req, res) {
   console.log('/get_heating');
 
-  // get current heating state
-  res.send(true);
-
-  // gpio_tools.getValue(function(value) {
-  //   inputs[0].value = value;
-  //   console.log('inputs[0].value=' + inputs[0].value);
-  //   res.send(inputs[0]);
-  // });
+  gpio_tools.getHeaterState(function(state) {
+    res.send(state);
+  });
 });
 
 app.get('/set_preset_temp/:value', auth, function(req, res) {
@@ -181,9 +170,11 @@ function collectAndRegulateTemp() {
 
   gpio_tools.getTempLiving(function(value) {
     last_temp_living = value;
-  });
 
-  // TODO regulate on/off
+    // regulate on/off
+    var on = (last_temp_preset * 1) > (last_temp_living * 1);
+    gpio_tools.regulateHeating(on);
+  });
 }
 
 function collectAndRecordCurrTemps() {
@@ -203,53 +194,58 @@ function collectAndRecordCurrTemps() {
 }
 
 function publishDataOnline() {
-  // curl -X POST -H "Content-Type: application/json" -d '{ "feed_id": 43290, "value": 8.1 }' http://api.sen.se/events/?sense_key=6AfdW7DuFCNFzoUEXWYWvQ
+  console.log('publishDataOnline()');
+  try {
+    // curl -X POST -H "Content-Type: application/json" -d '{ "feed_id": 43290, "value": 8.1 }' http://api.sen.se/events/?sense_key=6AfdW7DuFCNFzoUEXWYWvQ
 
-  var sense_url = 'http://api.sen.se/events/?sense_key=6AfdW7DuFCNFzoUEXWYWvQ';
+    var sense_url = 'http://api.sen.se/events/?sense_key=6AfdW7DuFCNFzoUEXWYWvQ';
 
-  var feed_preset = {
-    "feed_id": 43288,
-    "value": last_temp_preset
-  };
-  var feed_living = {
-    "feed_id": 43289,
-    "value": last_temp_living
-  };
-  var feed_osijek = {
-    "feed_id": 43290,
-    "value": last_temp_osijek
-  };
+    var feed_preset = {
+      "feed_id": 43288,
+      "value": last_temp_preset
+    };
+    var feed_living = {
+      "feed_id": 43289,
+      "value": last_temp_living
+    };
+    var feed_osijek = {
+      "feed_id": 43290,
+      "value": last_temp_osijek
+    };
 
-  request.post({
-    url: sense_url,
-    json: feed_preset
-  }, function(error, response, body) {
-    if (!error && response.statusCode == 200) {
-      console.log(body);
-    } else {
-      console.error(error);
-    }
-  });
-  request.post({
-    url: sense_url,
-    json: feed_living
-  }, function(error, response, body) {
-    if (!error && response.statusCode == 200) {
-      console.log(body);
-    } else {
-      console.error(error);
-    }
-  });
-  request.post({
-    url: sense_url,
-    json: feed_osijek
-  }, function(error, response, body) {
-    if (!error && response.statusCode == 200) {
-      console.log(body);
-    } else {
-      console.error(error);
-    }
-  });
+    request.post({
+      url: sense_url,
+      json: feed_preset
+    }, function(error, response, body) {
+      if (!error && response.statusCode == 200) {
+        console.log(body);
+      } else {
+        console.error(error);
+      }
+    });
+    request.post({
+      url: sense_url,
+      json: feed_living
+    }, function(error, response, body) {
+      if (!error && response.statusCode == 200) {
+        console.log(body);
+      } else {
+        console.error(error);
+      }
+    });
+    request.post({
+      url: sense_url,
+      json: feed_osijek
+    }, function(error, response, body) {
+      if (!error && response.statusCode == 200) {
+        console.log(body);
+      } else {
+        console.error(error);
+      }
+    });
+  } catch (exception) {
+    console.error(exception);
+  }
 }
 
 function randomFromInterval(from, to) {

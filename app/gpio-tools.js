@@ -46,23 +46,118 @@ var getTempLiving = function(cb) {
   });
 }
 
-var getValue = function(cb) {
-  console.log('gpio-tools.getValue()');
-  gpio.read(pin, function(err, value) {
-    if (err) throw err;
-    console.log(value);
-    if (typeof(cb) == "function") {
-      cb(value);
+// var getValue = function(cb) {
+//   console.log('gpio-tools.getValue()');
+//   gpio.read(pin, function(err, value) {
+//     if (err) throw err;
+//     console.log(value);
+//     if (typeof(cb) == "function") {
+//       cb(value);
+//     }
+//   });
+// }
+
+// var setValue = function(value, cb) {
+//   console.log('gpio-tools.setValue(' + value + ')');
+//   gpio.write(pin, value, function(err) {
+//     if (err) throw err;
+//     if (typeof(cb) == "function") {
+//       cb();
+//     }
+//   });
+// }
+
+var heatingSwitchedOff = false;
+var dummyHeaterState = true;
+var pumpOffTimeout;
+
+var getHeaterState = function(cb) {
+  console.log('gpio-tools.getHeaterState()');
+  // TODO return actual GPIO heating relay state & delete dummyHeaterState var
+  if (typeof(cb) == "function") {
+    cb(dummyHeaterState);
+  }
+}
+
+var regulateHeating = function(turnOn) {
+  console.log('gpio-tools.regulateHeating(' + turnOn + ')');
+
+  if (heatingSwitchedOff) {
+    console.log('heating is switched off --> skip regulating');
+    return;
+  }
+
+  getHeaterState(function(heaterState) {
+    console.log('  heaterState=' + heaterState);
+    if (turnOn) {
+      if (!heaterState) {
+        clearTimeout(pumpOffTimeout);
+
+        // set pump 1
+        console.log('  setPump(1)');
+
+        setTimeout(function() {
+
+          // set heater 1 & delete dummyHeaterState var
+          dummyHeaterState = true;
+          console.log('  setHeater(1)');
+
+        }, 3000); // 3s
+      }
+    } else {
+      if (heaterState) {
+
+        // set heater 0 & delete dummyHeaterState var
+        dummyHeaterState = false;
+        console.log('  setHeater(0)');
+
+        pumpOffTimeout = setTimeout(function() {
+
+          // set pump 0
+          console.log('  setPump(0)');
+
+        }, 300000); // 300.000 = 5 min
+      }
     }
   });
 }
 
-var setValue = function(value, cb) {
-  console.log('gpio-tools.setValue(' + value + ')');
-  gpio.write(pin, value, function(err) {
-    if (err) throw err;
+var setHeating = function(turnOn, cb) {
+  console.log('gpio-tools.setHeating(' + turnOn + ')');
+
+  getHeaterState(function(heaterState) {
+    console.log('  heaterState=' + heaterState);
+    if (turnOn) {
+      if (!heaterState) {
+        clearTimeout(pumpOffTimeout);
+
+        // set pump 1
+        console.log('  setPump(1)');
+
+        // set heater 1 & delete dummyHeaterState var
+        dummyHeaterState = true;
+        console.log('  setHeater(1)');
+      }
+
+      heatingSwitchedOff = false;
+      console.log('  heatingSwitchedOff = false');
+
+    } else {
+      if (heaterState) {
+        // set heater 0 & delete dummyHeaterState var
+        dummyHeaterState = false;
+        console.log('  setHeater(0)');
+
+        // set pump 0
+        console.log('  setPump(0)');
+      }
+
+      heatingSwitchedOff = true;
+      console.log('  heatingSwitchedOff = true');
+    }
+
     if (typeof(cb) == "function") {
-      cb();
+      cb(!heatingSwitchedOff);
     }
   });
 }
@@ -72,7 +167,7 @@ var exitGracefully = function(cb) {
   gpio.write(pin, 0, function(err) {
     if (err) throw err;
     gpio.close(pin); // then close pin 11
-    console.log('Closed the GPIO pin ' + pin);
+    console.log('  Closed the GPIO pin ' + pin);
 
     if (typeof(cb) == "function") {
       cb();
@@ -82,6 +177,7 @@ var exitGracefully = function(cb) {
 
 exports.init = init;
 exports.getTempLiving = getTempLiving;
-exports.getValue = getValue;
-exports.setValue = setValue;
+exports.getHeaterState = getHeaterState;
+exports.regulateHeating = regulateHeating;
+exports.setHeating = setHeating;
 exports.exitGracefully = exitGracefully;

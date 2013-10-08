@@ -96,9 +96,9 @@ var setSwitchState = function() {
   $.ajax({
     url: url,
     dataType: "json"
-  }).done(function(data) {
-    console.log('/set_heating API response received');
-    $("input#myonoffswitch").prop('checked', state);
+  }).done(function(newState) {
+    console.log('/set_heating API response received: ' + newState);
+    $("input#myonoffswitch").prop('checked', newState);
   }).fail(function(res) {
     // console.error(res.statusText);
     $('#error').removeClass('hidden').addClass('in');
