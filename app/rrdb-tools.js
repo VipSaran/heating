@@ -74,7 +74,7 @@ var getLastTemps = function(cb) {
       var lines = out.replace(/\r\n/g, "\n").split("\n");
 
       var tabs = lines[2].split(" ");
-      console.log("tabs: " + tabs);
+      console.log("  tabs: " + tabs);
 
       temps = {
         "temp_preset": tabs[1],
@@ -94,7 +94,7 @@ var getLastTemps = function(cb) {
       }
 
     } catch (err) {
-      console.log("Parsing error: " + err);
+      console.log("  Parsing error: " + err);
       if (typeof(cb) == "function") {
         temps = {
           "temp_preset": 23,

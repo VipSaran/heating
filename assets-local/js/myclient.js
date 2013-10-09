@@ -78,26 +78,26 @@ var setPresetTemp = function(value) {
 }
 
 var updateSwitchState = function() {
-  var url = document.URL + 'get_heating';
+  var url = document.URL + 'get_heating_switch';
   console.log('URL=' + url);
   $.ajax({
     url: url,
     dataType: "json"
   }).done(function(state) {
-    console.log('/get_heating API response received: ' + state);
+    console.log('/get_heating_switch API response received: ' + state);
     $("input#myonoffswitch").prop('checked', state);
   });
 }
 
-var setSwitchState = function() {
+var switchHeating = function() {
   var state = getSwitchBinaryState();
-  var url = document.URL + 'set_heating/' + state;
+  var url = document.URL + 'switch_heating/' + state;
   console.log('URL=' + url);
   $.ajax({
     url: url,
     dataType: "json"
   }).done(function(newState) {
-    console.log('/set_heating API response received: ' + newState);
+    console.log('/switch_heating API response received: ' + newState);
     $("input#myonoffswitch").prop('checked', newState);
   }).fail(function(res) {
     // console.error(res.statusText);
@@ -133,7 +133,7 @@ $(document).ready(function() {
 
   $('#myonoffswitch').on("click", function(event) {
     event.preventDefault();
-    setSwitchState();
+    switchHeating();
   });
 
   $('#error_close').click(function() {

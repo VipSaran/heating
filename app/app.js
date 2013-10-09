@@ -1,9 +1,9 @@
 var express = require('express');
-var request = require('request');
 var user_tools = require('./user-tools');
 var gpio_tools = require('./gpio-tools');
-var weather_tools = require('./weather-tools');
 var rrdb_tools = require('./rrdb-tools');
+var weather_tools = require('./weather-tools');
+var cloud_tools = require('./cloud-tools');
 
 var app = express();
 
@@ -71,18 +71,18 @@ var auth = function(req, res, next) {
   }
 }
 
-app.get('/set_heating/:value', auth, function(req, res) {
-  console.log('/set_heating/' + req.params.value);
+app.get('/switch_heating/:value', auth, function(req, res) {
+  console.log('/switch_heating/' + req.params.value);
 
-  gpio_tools.setHeating((req.params.value * 1) == 1, function(state) {
+  gpio_tools.switchHeating((req.params.value * 1) == 1, function(state) {
     res.send(state);
   });
 });
 
-app.get('/get_heating', function(req, res) {
-  console.log('/get_heating');
+app.get('/get_heating_switch', function(req, res) {
+  console.log('/get_heating_switch');
 
-  gpio_tools.getHeaterState(function(state) {
+  gpio_tools.getHeatingSwitch(function(state) {
     res.send(state);
   });
 });
@@ -189,63 +189,8 @@ function collectAndRecordCurrTemps() {
 
     rrdb_tools.insert(ts, last_temp_preset, last_temp_living, last_temp_osijek);
 
-    publishDataOnline();
+    cloud_tools.publishDataOnline(last_temp_preset, last_temp_living, last_temp_osijek);
   })
-}
-
-function publishDataOnline() {
-  console.log('publishDataOnline()');
-  try {
-    // curl -X POST -H "Content-Type: application/json" -d '{ "feed_id": 43290, "value": 8.1 }' http://api.sen.se/events/?sense_key=6AfdW7DuFCNFzoUEXWYWvQ
-
-    var sense_url = 'http://api.sen.se/events/?sense_key=6AfdW7DuFCNFzoUEXWYWvQ';
-
-    var feed_preset = {
-      "feed_id": 43288,
-      "value": last_temp_preset
-    };
-    var feed_living = {
-      "feed_id": 43289,
-      "value": last_temp_living
-    };
-    var feed_osijek = {
-      "feed_id": 43290,
-      "value": last_temp_osijek
-    };
-
-    request.post({
-      url: sense_url,
-      json: feed_preset
-    }, function(error, response, body) {
-      if (!error && response.statusCode == 200) {
-        console.log(body);
-      } else {
-        console.error(error);
-      }
-    });
-    request.post({
-      url: sense_url,
-      json: feed_living
-    }, function(error, response, body) {
-      if (!error && response.statusCode == 200) {
-        console.log(body);
-      } else {
-        console.error(error);
-      }
-    });
-    request.post({
-      url: sense_url,
-      json: feed_osijek
-    }, function(error, response, body) {
-      if (!error && response.statusCode == 200) {
-        console.log(body);
-      } else {
-        console.error(error);
-      }
-    });
-  } catch (exception) {
-    console.error(exception);
-  }
 }
 
 function randomFromInterval(from, to) {

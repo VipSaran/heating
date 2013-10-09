@@ -67,7 +67,7 @@ var checkCredentials = function(name, pass, cb) {
       var data = JSON.parse(data_json);
       // console.log(data);
       for (var i = data.length - 1; i >= 0; i--) {
-        console.log("data[" + i + "].username=" + data[i].username);
+        console.log("  data[" + i + "].username=" + data[i].username);
         if (data[i].username === name) {
           // console.log("data[" + i + "].password=" + data[i].password);
           valid = (pass == data[i].password);
