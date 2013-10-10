@@ -168,7 +168,7 @@ function initTimers() {
 function collectAndRegulateTemp() {
   console.log('collectAndRegulateTemp()');
 
-  gpio_tools.getTempLiving(function(value) {
+  gpio_tools.getTempLiving(last_temp_living, function(value) {
     last_temp_living = value;
 
     // regulate on/off

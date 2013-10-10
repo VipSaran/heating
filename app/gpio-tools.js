@@ -3,7 +3,6 @@ var exec = require('child_process').exec;
 
 var pin;
 var tempLivingSensorId = '28-000004d56dad';
-var cachedTempLiving = 23.0;
 
 function execute(command, callback) {
   exec(command, function(error, stdout, stderr) {
@@ -24,24 +23,53 @@ var init = function(thePin) {
   gpio.open(pin, "out");
 }
 
-var getTempLiving = function(cb) {
-  console.log('gpio-tools.getTempLiving()');
-  var readStr = "cat /sys/bus/w1/devices/" + tempLivingSensorId + "/w1_slave | grep t= | cut -f2 -d= | awk '{print $1/1000}'";
+var getTempLiving = function(last_temp_living, cb) {
+  console.log('gpio-tools.getTempLiving(' + last_temp_living + ')');
+  // var readStr = "cat /sys/bus/w1/devices/" + tempLivingSensorId + "/w1_slave | grep t= | cut -f2 -d= | awk '{print $1/1000}'";
+  var readStr = "cat /sys/bus/w1/devices/" + tempLivingSensorId + "/w1_slave";
 
   var tempLiving;
   execute(readStr, function(out, err) {
     if (err) {
       console.error(err);
-      tempLiving = cachedTempLiving;
-    } else if (out == 0 || out == "0") {
-      console.error('  Sensor returned 0.');
-      tempLiving = cachedTempLiving;
-    } else if ((out * 1) < -30 || (out * 1) > 40) {
-      console.error('  Invalid sensor readout: ' + out);
-      tempLiving = cachedTempLiving;
+      tempLiving = last_temp_living;
     } else {
-      // console.error('  living room sensor readout: ' + out);
-      tempLiving = parseFloat(out).toFixed(1);
+      try {
+        var lines = out.replace(/\r\n/g, "\n").split("\n");
+        // console.log(lines);
+
+        if (lines == null || lines.length != 3) {
+          console.error('  ERROR: Wrong sensor readout format.');
+          tempLiving = last_temp_living;
+        } else {
+          var crc_OK = lines[0].substring(lines[0].length - 3) == "YES";
+          // console.log('  crc=' + crc_OK);
+
+          if (crc_OK) {
+            var temp = lines[1].substring(lines[1].indexOf('t=') + 2);
+            // console.log('  temp=' + temp);
+
+            if (!isNaN(temp)) {
+              tempLiving = parseFloat(temp / 1000).toFixed(1);
+              console.log('  tempLiving=' + tempLiving);
+
+              if (tempLiving < 1 || tempLiving > 30) {
+                console.error('  ERROR: Value outside of reasonable range.');
+                tempLiving = last_temp_living;
+              }
+            } else {
+              console.error('  ERROR: Temperature value not a number.');
+              tempLiving = last_temp_living;
+            }
+          } else {
+            console.error('  ERROR: Sensor readout CRC failed.');
+            tempLiving = last_temp_living;
+          }
+        }
+      } catch (exception) {
+        console.error('  ERROR: Exception caught while parsing: ' + exception);
+        tempLiving = last_temp_living;
+      }
     }
 
     if (typeof(cb) == "function") {
