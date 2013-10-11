@@ -6,6 +6,8 @@ var app_dir = project_dir + "/app";
 var rrd_name = "heating.rrd";
 var img_dir = project_dir + "/assets-local/img";
 var img_name = "temperatures_graph.png";
+var img_name_week = "temperatures_graph_week.png";
+var img_name_month = "temperatures_graph_month.png";
 
 function execute(command, callback) {
   exec(command, function(error, stdout, stderr) {
@@ -48,7 +50,7 @@ var init = function() {
       }
     });
   }
-}
+};
 
 // Should be called only at application start.
 // Later, live values are taken directly from the app context.
@@ -105,7 +107,7 @@ var getLastTemps = function(cb) {
       }
     }
   });
-}
+};
 
 var insert = function(ts, temp_preset, temp_living, temp_osijek) {
   console.log("rrdb-tools.insert()");
@@ -116,9 +118,23 @@ var insert = function(ts, temp_preset, temp_living, temp_osijek) {
   execute(updateStr, function(out, err) {
     if (err) throw err;
   });
+};
+
+function getCurrTimeSec() {
+  var now = new Date().getTime();
+  return (parseFloat(now / 1000).toFixed(0));
+}
+
+function getWeekOldTimeSec() {
+  return (getCurrTimeSec() - (3600 * 24 * 7));
+}
+
+function getMonthOldTimeSec() {
+  return (getCurrTimeSec() - (3600 * 24 * 30));
 }
 
 var lastPaintedMillis = 0;
+
 var paint = function(cb) {
   console.log("rrdb-tools.paint()");
 
@@ -131,9 +147,8 @@ var paint = function(cb) {
     return;
   }
 
-  var graphStr = 'rrdtool graph ' + img_dir + '/' + img_name + ' ' +
-    '--end N --x-grid HOUR:1:HOUR:8:HOUR:2:0:%H ' +
-    '--vertical-label "C" --border 0 --zoom 2 --slope-mode ' +
+  var graphStrDefaults = '--font DEFAULT:0:"Droid Sans" ' +
+    '--vertical-label "°C" --border 0 --zoom 2 --slope-mode ' +
     '--color CANVAS#FFFFFF00 --color FRAME#000000FF --color BACK#FFFFFF00 ' +
     'TEXTALIGN:center ' +
     'DEF:mytemp_preset=' + app_dir + "/" + rrd_name + ':temp_preset:AVERAGE ' +
@@ -143,37 +158,49 @@ var paint = function(cb) {
     'LINE:mytemp_preset#2CA02C:"zadano" ' +
     'LINE:mytemp_living#D62728:"dnevna soba"';
 
+  // uses "RRA:AVERAGE:0.5:1:288 " + // 5 min avg., last 24 hours
+  var graphStrDay = 'rrdtool graph ' + img_dir + '/' + img_name + ' ' +
+    '--end N ' +
+    '--x-grid HOUR:1:HOUR:8:HOUR:2:0:%Hh '; // grid_lines:major_grid_lines:labels:labels_shift
 
-  execute(graphStr, function(out, err) {
+  // uses "RRA:AVERAGE:0.5:12:168 " + // 1 hour avg., last 7 days
+  var graphStrWeek = 'rrdtool graph ' + img_dir + '/' + img_name_week + ' ' +
+    '--start ' + getWeekOldTimeSec() + ' --end N ' +
+    '--x-grid HOUR:8:DAY:1:DAY:1:259200:%a ';
+
+  // uses "RRA:AVERAGE:0.5:48:315 " + // 4 hour avg., last 30 days
+  var graphStrMonth = 'rrdtool graph ' + img_dir + '/' + img_name_month + ' ' +
+    '--start ' + getMonthOldTimeSec() + ' --end N ' +
+    '--x-grid DAY:1:DAY:7:DAY:7:0:%d.%m. ';
+
+
+  execute(graphStrDay + graphStrDefaults, function(out, err) {
     if (err) throw err;
+
+    console.log("  painted DAY");
 
     // only update if actually painted
     lastPaintedMillis = currTimeMillis;
 
-    if (typeof(cb) == "function") {
-      cb(true); // updated
-    }
+    execute(graphStrWeek + graphStrDefaults, function(out, err) {
+      if (err) throw err;
+
+      console.log("  painted WEEK");
+
+      execute(graphStrMonth + graphStrDefaults, function(out, err) {
+        if (err) throw err;
+
+        console.log("  painted MONTH");
+
+        if (typeof(cb) == "function") {
+          cb(true); // updated
+        }
+      });
+    });
   });
-}
-
-var test = function(cb) {
-  console.log("rrdb-tools.test()");
-  execute("pwd", function(dir) {
-    console.log(dir);
-    if (typeof(cb) == "function") {
-      cb(dir);
-    }
-  });
-}
-
-var getImageName = function() {
-  return img_name;
-}
-
+};
 
 exports.init = init;
 exports.getLastTemps = getLastTemps;
 exports.insert = insert;
 exports.paint = paint;
-exports.getImageName = getImageName;
-exports.test = test;
