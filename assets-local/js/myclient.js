@@ -11,8 +11,17 @@ var refreshImage = function(cb) {
   }).done(function(updated) {
     console.log('/refresh_image API response received: ' + updated);
     if (updated) {
-      $("#temperatures_graph").html($("<img />", {
-        src: "assets-local/img/temperatures_graph.png"
+      $("#graph_day").html($("<img />", {
+        src: "assets-local/img/temperatures_graph.png",
+        title: "dnevni pogled"
+      }));
+      $("#graph_week").html($("<img />", {
+        src: "assets-local/img/temperatures_graph_week.png",
+        title: "tjedni pogled"
+      }));
+      $("#graph_month").html($("<img />", {
+        src: "assets-local/img/temperatures_graph_month.png",
+        title: "mjesecni pogled"
       }));
       lastRefreshed = new Date().toLocaleString();
     }
@@ -115,12 +124,20 @@ var isSwitchOn = function() {
 
 
 $(document).ready(function() {
+  $('.carousel').carousel();
+
+  $(".carousel-control").hover(function() {
+    $(this).toggleClass('is-hover');
+  });
+
   updateSwitchState();
 
   refreshData();
 
   $("#temperatures_graph").click(function() {
-    refreshData();
+    if (!$('.carousel-control').hasClass('is-hover')) {
+      refreshData();
+    }
   });
 
   $('#temp_preset_dec').click(function() {

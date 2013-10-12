@@ -27,8 +27,8 @@
     <div class="container fill">
 
       <div id="error" class="alert alert-danger hidden fade">
-        <button type="button" id="error_close" class="close">&times;</button>
-        <strong>Greška!</strong> Za odabranu funkciju potrebno je odobrenje.
+        <button type="button" id="error_close" class="close">&times;</button> <strong>Greška!</strong>
+        Za odabranu funkciju potrebno je odobrenje.
       </div>
 
       <div class="modal fade" id="progress" tabindex="-1" role="dialog" aria-labelledby="progressLabel" aria-hidden="true">
@@ -42,8 +42,28 @@
       </div>
 
       <div id="temperatures_graph">
-        <img src="assets-local/img/temperatures_graph.png" />
+        <div id="myCarousel" class="carousel slide">
+          <div class="carousel-inner">
+            <div id="graph_day" class="item active">
+              <img src="assets-local/img/temperatures_graph.png" title="dnevni pogled"/>
+            </div>
+            <div id="graph_week" class="item">
+              <img src="assets-local/img/temperatures_graph_week.png" title="tjedni pogled"/>
+            </div>
+            <div id="graph_month" class="item">
+              <img src="assets-local/img/temperatures_graph_month.png" title="mjesecni pogled"/>
+            </div>
+          </div>
+
+          <a class="left carousel-control" href="#myCarousel" data-slide="prev">
+            <span class="glyphicon glyphicon-circle-arrow-left"></span>
+          </a>
+          <a class="right carousel-control" href="#myCarousel" data-slide="next">
+            <span class="glyphicon glyphicon-circle-arrow-right"></span>
+          </a>
+        </div>
       </div>
+
       <div class="row">
         <div class="col-md-4">
           Osijek:
