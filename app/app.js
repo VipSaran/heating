@@ -1,4 +1,5 @@
 var express = require('express');
+var config = require('./config-tools');
 var user_tools = require('./user-tools');
 var gpio_tools = require('./gpio-tools');
 var rrdb_tools = require('./rrdb-tools');
@@ -6,12 +7,6 @@ var weather_tools = require('./weather-tools');
 var cloud_tools = require('./cloud-tools');
 
 var app = express();
-
-// var inputs = [{
-//   pin: '11',
-//   gpio: '17',
-//   value: 0
-// }];
 
 var last_temp_preset = 0;
 var last_temp_living = 0;
@@ -22,15 +17,18 @@ app.configure(function() {
   app.use(express.favicon());
   app.use(express['static'](__dirname + '/../'));
 
-  // gpio_tools.init(inputs[0].pin);
+  config.readConfig(function() {
 
-  rrdb_tools.init();
+    gpio_tools.init();
 
-  initTimers();
-  rrdb_tools.getLastTemps(function(data) {
-    last_temp_preset = data.temp_preset;
-    last_temp_living = data.temp_living;
-    last_temp_osijek = data.temp_osijek;
+    rrdb_tools.init();
+
+    initTimers();
+    rrdb_tools.getLastTemps(function(data) {
+      last_temp_preset = data.temp_preset;
+      last_temp_living = data.temp_living;
+      last_temp_osijek = data.temp_osijek;
+    });
   });
 });
 
@@ -145,8 +143,10 @@ process.on('SIGINT', function() {
   clearInterval(tempRegulateInterval);
   clearInterval(tempCollectInterval);
 
-  gpio_tools.exitGracefully(function() {
-    process.exit(0); // and terminate the program
+  config.writeConfig(function() {
+    gpio_tools.exitGracefully(function() {
+      process.exit(0); // and terminate the program
+    });
   });
 });
 

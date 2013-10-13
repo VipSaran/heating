@@ -1,7 +1,5 @@
 var fs = require('fs');
-
-var project_dir = "/home/pi/nodejs/heating";
-var app_dir = project_dir + "/app";
+var config = require('./config-tools');
 
 var cached_users = [];
 
@@ -54,7 +52,7 @@ var checkCredentials = function(name, pass, cb) {
       cb(cached.isValid());
     }
   } else {
-    fs.readFile(app_dir + '/.auth', 'utf8', function(err, data_json) {
+    fs.readFile(config.app_dir + '/.auth', 'utf8', function(err, data_json) {
       if (err) {
         console.error(err);
         if (typeof(cb) == "function") {

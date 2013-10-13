@@ -1,7 +1,8 @@
 var gpio = require("pi-gpio");
 var exec = require('child_process').exec;
+var config = require('./config-tools');
 
-var pin;
+// var pin;
 var tempLivingSensorId = '28-000004d56dad';
 
 function execute(command, callback) {
@@ -14,13 +15,14 @@ function execute(command, callback) {
   });
 };
 
-var init = function(thePin) {
-  console.log('gpio-tools.init(' + thePin + ')');
-  pin = thePin;
+var init = function() {
+  console.log('gpio-tools.init()');
 
-  gpio.close(pin);
+  // pin = thePin;
 
-  gpio.open(pin, "out");
+  // gpio.close(pin);
+
+  // gpio.open(pin, "out");
 }
 
 var getTempLiving = function(last_temp_living, cb) {
@@ -100,10 +102,6 @@ var getTempLiving = function(last_temp_living, cb) {
 // }
 
 
-// a soft switch enabling or disabling the regulation
-// only overrides temperature regulation for switched off state
-var heatingSwitch = true;
-
 var dummyHeaterState = true;
 var pumpOffTimeout;
 
@@ -118,7 +116,7 @@ var getHeaterState = function(cb) {
 var regulateHeating = function(turnOn) {
   console.log('gpio-tools.regulateHeating(' + turnOn + ')');
 
-  if (!heatingSwitch) {
+  if (!config.heatingSwitch) {
     console.log('  heating is switched off --> skip regulating');
     return;
   }
@@ -162,14 +160,17 @@ var getHeatingSwitch = function(cb) {
   console.log('gpio-tools.getHeatingSwitch()');
 
   if (typeof(cb) == "function") {
-    cb(heatingSwitch);
+    console.log("  config.heatingSwitch = " + config.heatingSwitch)
+    cb(config.heatingSwitch);
   }
 }
 
+// a soft switch enabling or disabling the regulation
+// only overrides temperature regulation for switched off state
 var switchHeating = function(turnOn, cb) {
   console.log('gpio-tools.switchHeating(' + turnOn + ')');
 
-  heatingSwitch = turnOn;
+  config.heatingSwitch = turnOn;
 
   if (!turnOn) {
     getHeaterState(function(heaterState) {
@@ -197,15 +198,15 @@ var switchHeating = function(turnOn, cb) {
 
 var exitGracefully = function(cb) {
   console.log('gpio-tools.exitGracefully()');
-  gpio.write(pin, 0, function(err) {
-    if (err) throw err;
-    gpio.close(pin); // then close pin 11
-    console.log('  Closed the GPIO pin ' + pin);
+  // gpio.write(pin, 0, function(err) {
+  //   if (err) throw err;
+  //   gpio.close(pin); // then close pin 11
+  //   console.log('  Closed the GPIO pin ' + pin);
 
-    if (typeof(cb) == "function") {
-      cb();
-    }
-  });
+  if (typeof(cb) == "function") {
+    cb();
+  }
+  // });
 }
 
 exports.init = init;
