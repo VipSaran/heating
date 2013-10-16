@@ -115,7 +115,7 @@ app.get('/get_temps', function(req, res) {
 
 app.get('/refresh_image', function(req, res) {
   console.log('/refresh_image');
-  rrdb_tools.paint(function(updated) {
+  rrdb_tools.paintTemps(function(updated) {
     res.send(updated);
   });
 });
@@ -167,6 +167,7 @@ function initTimers() {
 
 function collectAndRegulateTemp() {
   console.log('collectAndRegulateTemp()');
+  var ts = Math.round(new Date().getTime() / 1000);
 
   gpio_tools.getTempLiving(last_temp_living, function(value) {
     last_temp_living = value;
@@ -174,6 +175,10 @@ function collectAndRegulateTemp() {
     // regulate on/off
     var on = (last_temp_preset * 1) > (last_temp_living * 1);
     gpio_tools.regulateHeating(on);
+  });
+
+  gpio_tools.getHeaterState(function(state) {
+    rrdb_tools.insertState(ts, state ? 1 : 0);
   });
 }
 
@@ -187,7 +192,7 @@ function collectAndRecordCurrTemps() {
     console.log('temp_living=' + last_temp_living);
     console.log('temp_osijek=' + last_temp_osijek);
 
-    rrdb_tools.insert(ts, last_temp_preset, last_temp_living, last_temp_osijek);
+    rrdb_tools.insertTemps(ts, last_temp_preset, last_temp_living, last_temp_osijek);
 
     cloud_tools.publishDataOnline(last_temp_preset, last_temp_living, last_temp_osijek);
   })

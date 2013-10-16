@@ -1,7 +1,8 @@
 var fs = require('fs');
 
 var config_file_name = 'config.json';
-var rrd_name = "heating.rrd";
+var rrd_temps_name = "heating.rrd";
+var rrd_state_name = "heating_state.rrd";
 var project_dir = "/home/pi/nodejs/heating";
 var app_dir = project_dir + "/app";
 var img_dir = project_dir + "/assets-local/img";
@@ -56,7 +57,8 @@ Object.defineProperty(exports, "heatingSwitch", {
 });
 
 exports.app_dir = app_dir; // read-only var
-exports.rrd_name = rrd_name; // read-only var
+exports.rrd_temps_name = rrd_temps_name; // read-only var
+exports.rrd_state_name = rrd_state_name; // read-only var
 exports.img_dir = img_dir; // read-only var
 exports.readConfig = readConfig;
 exports.writeConfig = writeConfig;

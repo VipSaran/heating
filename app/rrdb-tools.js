@@ -3,21 +3,24 @@ var exec = require('child_process').exec;
 var config = require('./config-tools');
 
 var img_name = "temperatures_graph.png";
+var img_name_hour = "temperatures_graph_hour.png";
 var img_name_week = "temperatures_graph_week.png";
 var img_name_month = "temperatures_graph_month.png";
 
 function execute(command, callback) {
   exec(command, function(error, stdout, stderr) {
-    console.log("command: " + command);
-    console.log("error: " + error);
-    console.log("stdout: " + stdout);
-    console.log("stderr: " + stderr);
+    console.log(" command: " + command);
+    console.log(" error: " + error);
+    console.log(" stdout: " + stdout);
+    console.log(" stderr: " + stderr);
     callback(stdout, stderr);
   });
-};
+}
 
-function createRRD() {
-  var createStr = "rrdtool create " + config.app_dir + "/" + config.rrd_name + " " + //
+function createRRD_temps() {
+  console.log("rrdb-tools.createRRD_temps()");
+
+  var createStr = "rrdtool create " + config.app_dir + "/" + config.rrd_temps_name + " " + //
   "--start N --step 300 " + // data bucket 5 min long
   "DS:temp_preset:GAUGE:600:-30:40 " + // human defined
   "DS:temp_living:GAUGE:600:-30:40 " + // measured in livingroom
@@ -32,17 +35,43 @@ function createRRD() {
   });
 }
 
+function createRRD_state() {
+  console.log("rrdb-tools.createRRD_state()");
+
+  var createStr = "rrdtool create " + config.app_dir + "/" + config.rrd_state_name + " " + //
+  "--start N --step 30 " + // data bucket 30 s long
+  "DS:heater_state:GAUGE:600:0:1 " + // heater state (0/1)
+  "RRA:LAST:0:1:2880" // last value in 30 s, for last 1 hour
+
+  execute(createStr, function(out, err) {
+    if (err) throw err;
+  });
+}
+
 var init = function() {
   console.log("rrdb-tools.init()");
 
-  if (!fs.existsSync(config.app_dir + "/" + config.rrd_name)) {
-    createRRD();
+  if (!fs.existsSync(config.app_dir + "/" + config.rrd_temps_name)) {
+    createRRD_temps();
   } else {
     // exists --> check if valid
-    execute("rrdtool info " + config.app_dir + "/" + config.rrd_name, function(out, err) {
+    execute("rrdtool info " + config.app_dir + "/" + config.rrd_temps_name, function(out, err) {
       if (err) {
-        execute("rm " + config.app_dir + "/" + config.rrd_name, function(out, err) {
-          createRRD();
+        execute("rm " + config.app_dir + "/" + config.rrd_temps_name, function(out, err) {
+          createRRD_temps();
+        });
+      }
+    });
+  }
+
+  if (!fs.existsSync(config.app_dir + "/" + config.rrd_state_name)) {
+    createRRD_state();
+  } else {
+    // exists --> check if valid
+    execute("rrdtool info " + config.app_dir + "/" + config.rrd_state_name, function(out, err) {
+      if (err) {
+        execute("rm " + config.app_dir + "/" + config.rrd_state_name, function(out, err) {
+          createRRD_state();
         });
       }
     });
@@ -54,12 +83,16 @@ var init = function() {
 var getLastTemps = function(cb) {
   console.log("rrdb-tools.getLastTemps()");
 
-  var lastUpdateStr = "rrdtool lastupdate " + config.app_dir + "/" + config.rrd_name;
+  var lastUpdateStr = "rrdtool lastupdate " + config.app_dir + "/" + config.rrd_temps_name;
 
   execute(lastUpdateStr, function(out, err) {
     if (err) {
       if (typeof(cb) == "function") {
-        cb(defaultTempPreset);
+        cb({
+          "temp_preset": 22,
+          "temp_living": 22,
+          "temp_osijek": 10
+        });
       }
     }
 
@@ -106,11 +139,22 @@ var getLastTemps = function(cb) {
   });
 };
 
-var insert = function(ts, temp_preset, temp_living, temp_osijek) {
-  console.log("rrdb-tools.insert()");
+var insertTemps = function(ts, temp_preset, temp_living, temp_osijek) {
+  console.log("rrdb-tools.insertTemps()");
 
-  var updateStr = "rrdtool update " + config.app_dir + "/" + config.rrd_name + " " +
+  var updateStr = "rrdtool update " + config.app_dir + "/" + config.rrd_temps_name + " " +
     ts + ":" + temp_preset + ":" + temp_living + ":" + temp_osijek;
+
+  execute(updateStr, function(out, err) {
+    if (err) throw err;
+  });
+};
+
+var insertState = function(ts, heater_state) {
+  console.log("rrdb-tools.insertState()");
+
+  var updateStr = "rrdtool update " + config.app_dir + "/" + config.rrd_state_name + " " +
+    ts + ":" + heater_state;
 
   execute(updateStr, function(out, err) {
     if (err) throw err;
@@ -120,6 +164,10 @@ var insert = function(ts, temp_preset, temp_living, temp_osijek) {
 function getCurrTimeSec() {
   var now = new Date().getTime();
   return (parseFloat(now / 1000).toFixed(0));
+}
+
+function getHourOldTimeSec() {
+  return (getCurrTimeSec() - 3600);
 }
 
 function getWeekOldTimeSec() {
@@ -132,8 +180,8 @@ function getMonthOldTimeSec() {
 
 var lastPaintedMillis = 0;
 
-var paint = function(cb) {
-  console.log("rrdb-tools.paint()");
+var paintTemps = function(cb) {
+  console.log("rrdb-tools.paintTemps()");
 
   var currTimeMillis = new Date().getTime();
   if (currTimeMillis < (lastPaintedMillis + 300000)) {
@@ -148,9 +196,9 @@ var paint = function(cb) {
     '--vertical-label "°C" --border 0 --zoom 2 --slope-mode ' +
     '--color CANVAS#FFFFFF00 --color FRAME#000000FF --color BACK#FFFFFF00 ' +
     'TEXTALIGN:center ' +
-    'DEF:mytemp_preset=' + config.app_dir + "/" + config.rrd_name + ':temp_preset:AVERAGE ' +
-    'DEF:mytemp_living=' + config.app_dir + "/" + config.rrd_name + ':temp_living:AVERAGE ' +
-    'DEF:mytemp_osijek=' + config.app_dir + "/" + config.rrd_name + ':temp_osijek:AVERAGE ' +
+    'DEF:mytemp_preset=' + config.app_dir + "/" + config.rrd_temps_name + ':temp_preset:AVERAGE ' +
+    'DEF:mytemp_living=' + config.app_dir + "/" + config.rrd_temps_name + ':temp_living:AVERAGE ' +
+    'DEF:mytemp_osijek=' + config.app_dir + "/" + config.rrd_temps_name + ':temp_osijek:AVERAGE ' +
     'LINE:mytemp_osijek#1F77B4:"Osijek" ' +
     'LINE:mytemp_preset#2CA02C:"zadano" ' +
     'LINE:mytemp_living#D62728:"dnevna soba"';
@@ -189,15 +237,50 @@ var paint = function(cb) {
 
         console.log("  painted MONTH");
 
-        if (typeof(cb) == "function") {
-          cb(true); // updated
-        }
+        paintTempsAndState(function() {
+          if (typeof(cb) == "function") {
+            cb(true); // updated
+          }
+        });
       });
     });
   });
 };
 
+var paintTempsAndState = function(cb) {
+  console.log("rrdb-tools.paintTempsAndState()");
+
+  var graphStrHour = 'rrdtool graph ' + config.img_dir + '/' + img_name_hour + ' ' +
+    '--start ' + getHourOldTimeSec() + ' --end N ' +
+    '--x-grid MINUTE:1:MINUTE:5:MINUTE:10:0:%H:%M '; // grid_lines:major_grid_lines:labels:labels_shift
+
+  var graphStrDefaults = '--font DEFAULT:0:"Droid Sans" ' +
+    '--vertical-label "°C" --border 0 --zoom 2 --slope-mode ' +
+    '--color CANVAS#FFFFFF00 --color FRAME#000000FF --color BACK#FFFFFF00 ' +
+    'TEXTALIGN:center ' +
+    'DEF:mytemp_preset=' + config.app_dir + "/" + config.rrd_temps_name + ':temp_preset:AVERAGE ' +
+    'DEF:mytemp_living=' + config.app_dir + "/" + config.rrd_temps_name + ':temp_living:AVERAGE ' +
+    'DEF:mytemp_osijek=' + config.app_dir + "/" + config.rrd_temps_name + ':temp_osijek:AVERAGE ' +
+    'DEF:myheater_state=' + config.app_dir + "/" + config.rrd_state_name + ':heater_state:LAST ' +
+    'CDEF:myheater_state_rel=myheater_state,0.5,GT,mytemp_preset,0,IF ' +
+    'AREA:myheater_state_rel#FE7F0E:"grijac" ' +
+    'LINE:mytemp_osijek#1F77B4:"Osijek" ' +
+    'LINE:mytemp_preset#2CA02C:"zadano" ' +
+    'LINE:mytemp_living#D62728:"dnevna soba"';
+
+  execute(graphStrHour + graphStrDefaults, function(out, err) {
+    if (err) throw err;
+
+    console.log("  painted HOUR");
+
+    if (typeof(cb) == "function") {
+      cb(true); // updated
+    }
+  });
+};
+
 exports.init = init;
 exports.getLastTemps = getLastTemps;
-exports.insert = insert;
-exports.paint = paint;
+exports.insertTemps = insertTemps;
+exports.insertState = insertState;
+exports.paintTemps = paintTemps;

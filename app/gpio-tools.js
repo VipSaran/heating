@@ -117,6 +117,15 @@ var regulateHeating = function(turnOn) {
   console.log('gpio-tools.regulateHeating(' + turnOn + ')');
 
   if (!config.heatingSwitch) {
+    getHeaterState(function(heaterState) {
+      console.log('  heaterState=' + heaterState);
+      if (heaterState) {
+        // set heater 0 & delete dummyHeaterState var
+        dummyHeaterState = false;
+        console.log('  setHeater(0)');
+      }
+    });
+
     console.log('  heating is switched off --> skip regulating');
     return;
   }

@@ -23,6 +23,10 @@ var refreshImage = function(cb) {
         src: "assets-local/img/temperatures_graph_month.png",
         title: "mjesecni pogled"
       }));
+      $("#graph_hour").html($("<img />", {
+        src: "assets-local/img/temperatures_graph_hour.png",
+        title: "pogled kroz jedan sat"
+      }));
       lastRefreshed = new Date().toLocaleString();
     }
 
