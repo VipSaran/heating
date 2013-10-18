@@ -172,10 +172,10 @@ function collectAndRegulateTemp() {
   gpio_tools.getTempLiving(last_temp_living, function(value) {
     last_temp_living = value;
 
+    // TODO use manual override switch
+    last_temp_preset = config.getTimeTableTemp();
     // regulate on/off
-    // var on = (last_temp_preset * 1) > (last_temp_living * 1);
-    var timetable_temp = config.getTimeTableTemp();
-    var on = (timetable_temp * 1) > (last_temp_living * 1);
+    var on = (last_temp_preset * 1) > (last_temp_living * 1);
     gpio_tools.regulateHeating(on);
   });
 

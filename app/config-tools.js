@@ -29,7 +29,9 @@ var heatingSwitch;
 var init = function(cb) {
   console.log("config-tools.init()");
 
-  readConfig(readTimeTable(cb));
+  readConfig(function() {
+    readTimeTable(cb);
+  });
 };
 
 var readConfig = function(cb) {
@@ -141,6 +143,7 @@ var getTimeTableTemp = function() {
   // console.log('  matchingPreset=');
   // console.log(matchingPreset);
 
+  console.log('  matchingPreset.temp=' + matchingPreset.temp);
   return matchingPreset.temp;
 };
 
