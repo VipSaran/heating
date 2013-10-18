@@ -161,23 +161,6 @@ var insertState = function(ts, heater_state) {
   });
 };
 
-function getCurrTimeSec() {
-  var now = new Date().getTime();
-  return (parseFloat(now / 1000).toFixed(0));
-}
-
-function getHourOldTimeSec() {
-  return (getCurrTimeSec() - 3600);
-}
-
-function getWeekOldTimeSec() {
-  return (getCurrTimeSec() - (3600 * 24 * 7));
-}
-
-function getMonthOldTimeSec() {
-  return (getCurrTimeSec() - (3600 * 24 * 30));
-}
-
 var lastPaintedMillis = 0;
 
 var paintTemps = function(cb) {
@@ -205,17 +188,17 @@ var paintTemps = function(cb) {
 
   // uses "RRA:AVERAGE:0.5:1:288 " + // 5 min avg., last 24 hours
   var graphStrDay = 'rrdtool graph ' + config.img_dir + '/' + img_name + ' ' +
-    '--end N ' +
+    '--start -86400 --end N ' +
     '--x-grid HOUR:1:HOUR:8:HOUR:2:0:%Hh '; // grid_lines:major_grid_lines:labels:labels_shift
 
   // uses "RRA:AVERAGE:0.5:12:168 " + // 1 hour avg., last 7 days
   var graphStrWeek = 'rrdtool graph ' + config.img_dir + '/' + img_name_week + ' ' +
-    '--start ' + getWeekOldTimeSec() + ' --end N ' +
+    '--start -604800 --end N ' +
     '--x-grid HOUR:8:DAY:1:DAY:1:259200:%a ';
 
   // uses "RRA:AVERAGE:0.5:48:315 " + // 4 hour avg., last 30 days
   var graphStrMonth = 'rrdtool graph ' + config.img_dir + '/' + img_name_month + ' ' +
-    '--start ' + getMonthOldTimeSec() + ' --end N ' +
+    '--start -2592000 --end N ' +
     '--x-grid DAY:1:DAY:7:DAY:7:0:%d.%m. ';
 
 
@@ -251,7 +234,7 @@ var paintTempsAndState = function(cb) {
   console.log("rrdb-tools.paintTempsAndState()");
 
   var graphStrHour = 'rrdtool graph ' + config.img_dir + '/' + img_name_hour + ' ' +
-    '--start ' + getHourOldTimeSec() + ' --end N ' +
+    '--start -3600 --end N ' +
     '--x-grid MINUTE:1:MINUTE:5:MINUTE:10:0:%H:%M '; // grid_lines:major_grid_lines:labels:labels_shift
 
   var graphStrDefaults = '--font DEFAULT:0:"Droid Sans" ' +
