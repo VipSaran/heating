@@ -17,7 +17,7 @@ app.configure(function() {
   app.use(express.favicon());
   app.use(express['static'](__dirname + '/../'));
 
-  config.readConfig(function() {
+  config.init(function() {
 
     gpio_tools.init();
 
@@ -173,7 +173,9 @@ function collectAndRegulateTemp() {
     last_temp_living = value;
 
     // regulate on/off
-    var on = (last_temp_preset * 1) > (last_temp_living * 1);
+    // var on = (last_temp_preset * 1) > (last_temp_living * 1);
+    var timetable_temp = config.getTimeTableTemp();
+    var on = (timetable_temp * 1) > (last_temp_living * 1);
     gpio_tools.regulateHeating(on);
   });
 
