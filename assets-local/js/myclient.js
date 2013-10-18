@@ -1,3 +1,7 @@
+$.ajaxSetup({
+  timeout: 10
+});
+
 var lastRefreshed = new Date().toLocaleString(); // fresh temp readout or fresh graph
 var dataRefreshInterval;
 var dataRefreshTimeout;
@@ -7,31 +11,43 @@ var refreshImage = function(cb) {
   console.log('URL=' + url);
   $.ajax({
     url: url,
-    dataType: "json"
-  }).done(function(updated) {
-    console.log('/refresh_image API response received: ' + updated);
-    if (updated) {
-      $("#graph_day").html($("<img />", {
-        src: "assets-local/img/temperatures_graph.png",
-        title: "dnevni pogled"
-      }));
-      $("#graph_week").html($("<img />", {
-        src: "assets-local/img/temperatures_graph_week.png",
-        title: "tjedni pogled"
-      }));
-      $("#graph_month").html($("<img />", {
-        src: "assets-local/img/temperatures_graph_month.png",
-        title: "mjesecni pogled"
-      }));
-      $("#graph_hour").html($("<img />", {
-        src: "assets-local/img/temperatures_graph_hour.png",
-        title: "pogled kroz jedan sat"
-      }));
-      lastRefreshed = new Date().toLocaleString();
-    }
-
-    if (typeof(cb) == "function") {
-      cb();
+    dataType: "json",
+    success: function(data, textStatus, jqXHR) {
+      console.log('/refresh_image API response received: ' + data);
+      if (data) {
+        $("#graph_day").html($("<img />", {
+          src: "assets-local/img/temperatures_graph.png",
+          title: "dnevni pogled"
+        }));
+        $("#graph_week").html($("<img />", {
+          src: "assets-local/img/temperatures_graph_week.png",
+          title: "tjedni pogled"
+        }));
+        $("#graph_month").html($("<img />", {
+          src: "assets-local/img/temperatures_graph_month.png",
+          title: "mjesecni pogled"
+        }));
+        $("#graph_hour").html($("<img />", {
+          src: "assets-local/img/temperatures_graph_hour.png",
+          title: "pogled kroz jedan sat"
+        }));
+        lastRefreshed = new Date().toLocaleString();
+      }
+    },
+    error: function(jqXHR, textStatus, errorThrown) {
+      console.error(textStatus + ': ' + errorThrown);
+      if (textStatus === "timeout") {
+        clearTimeout(dataRefreshTimeout);
+        $('#error_text').html('Pre dugo je vremena proteklo bez odgovora servera. Automatsko osvježavanje isključeno.');
+      } else {
+        $('#error_text').html(errorThrown);
+      }
+      $('#error').removeClass('hidden').addClass('in');
+    },
+    complete: function(jqXHR, textStatus) {
+      if (typeof(cb) == "function") {
+        cb();
+      }
     }
   });
 }
@@ -41,17 +57,30 @@ var refreshTemps = function() {
   console.log('URL=' + url);
   $.ajax({
     url: url,
-    dataType: "json"
-  }).done(function(data) {
-    console.log('/get_temps API response received: ' + JSON.stringify(data));
+    dataType: "json",
+    success: function(data, textStatus, jqXHR) {
+      console.log('/get_temps API response received: ' + JSON.stringify(data));
 
-    $("#temp_osijek").html(data.temp_osijek);
-    $("#temp_preset").html(data.temp_preset);
-    $("#temp_living").html(data.temp_living);
+      $("#temp_osijek").html(data.temp_osijek);
+      $("#temp_preset").html(data.temp_preset);
+      $("#temp_living").html(data.temp_living);
 
-    lastRefreshed = new Date().toLocaleString();
-    $('#progress').modal('hide');
-    $('#log').html('Posljednji puta osvježeno: ' + lastRefreshed);
+      lastRefreshed = new Date().toLocaleString();
+      $('#log').html('Posljednji puta osvježeno: ' + lastRefreshed);
+    },
+    error: function(jqXHR, textStatus, errorThrown) {
+      console.error(textStatus + ': ' + errorThrown);
+      if (textStatus === "timeout") {
+        clearTimeout(dataRefreshTimeout);
+        $('#error_text').html('Pre dugo je vremena proteklo bez odgovora servera. Automatsko osvježavanje isključeno.');
+      } else {
+        $('#error_text').html(errorThrown);
+      }
+      $('#error').removeClass('hidden').addClass('in');
+    },
+    complete: function(jqXHR, textStatus) {
+      $('#progress').modal('hide');
+    }
   });
 }
 
@@ -75,18 +104,27 @@ var setPresetTemp = function(value) {
   console.log('URL=' + url);
   $.ajax({
     url: url,
-    dataType: "json"
-  }).done(function(data) {
-    console.log('/set_preset_temp API response received');
-    $("#temp_osijek").html(data.temp_osijek);
-    $("#temp_preset").html(data.temp_preset);
-    $("#temp_living").html(data.temp_living);
+    dataType: "json",
+    success: function(data, textStatus, jqXHR) {
+      console.log('/set_preset_temp API response received: ' + JSON.stringify(data));
+      $("#temp_osijek").html(data.temp_osijek);
+      $("#temp_preset").html(data.temp_preset);
+      $("#temp_living").html(data.temp_living);
 
-    lastRefreshed = new Date().toLocaleString();
-    $('#log').html('Posljednji puta osvježeno: ' + lastRefreshed);
-  }).fail(function(res) {
-    // console.error(res.statusText);
-    $('#error').removeClass('hidden').addClass('in');
+      lastRefreshed = new Date().toLocaleString();
+      $('#log').html('Posljednji puta osvježeno: ' + lastRefreshed);
+    },
+    error: function(jqXHR, textStatus, errorThrown) {
+      console.error(textStatus + ': ' + errorThrown);
+      // console.error(jqXHR.statusText);
+      if (textStatus === "timeout") {
+        clearTimeout(dataRefreshTimeout);
+        $('#error_text').html('Pre dugo je vremena proteklo bez odgovora servera. Automatsko osvježavanje isključeno.');
+      } else {
+        $('#error_text').html('Za odabranu funkciju potrebno je odobrenje.');
+      }
+      $('#error').removeClass('hidden').addClass('in');
+    }
   });
 }
 
@@ -95,10 +133,22 @@ var updateSwitchState = function() {
   console.log('URL=' + url);
   $.ajax({
     url: url,
-    dataType: "json"
-  }).done(function(state) {
-    console.log('/get_heating_switch API response received: ' + state);
-    $("input#myonoffswitch").prop('checked', state);
+    dataType: "json",
+    success: function(data, textStatus, jqXHR) {
+      console.log('/get_heating_switch API response received: ' + data);
+      $("input#myonoffswitch").prop('checked', data);
+    },
+    error: function(jqXHR, textStatus, errorThrown) {
+      console.error(textStatus + ': ' + errorThrown);
+      // console.error(jqXHR.statusText);
+      if (textStatus === "timeout") {
+        clearTimeout(dataRefreshTimeout);
+        $('#error_text').html('Pre dugo je vremena proteklo bez odgovora servera. Automatsko osvježavanje isključeno.');
+      } else {
+        $('#error_text').html(errorThrown);
+      }
+      $('#error').removeClass('hidden').addClass('in');
+    }
   });
 }
 
@@ -108,13 +158,22 @@ var switchHeating = function() {
   console.log('URL=' + url);
   $.ajax({
     url: url,
-    dataType: "json"
-  }).done(function(newState) {
-    console.log('/switch_heating API response received: ' + newState);
-    $("input#myonoffswitch").prop('checked', newState);
-  }).fail(function(res) {
-    // console.error(res.statusText);
-    $('#error').removeClass('hidden').addClass('in');
+    dataType: "json",
+    success: function(data, textStatus, jqXHR) {
+      console.log('/switch_heating API response received: ' + data);
+      $("input#myonoffswitch").prop('checked', data);
+    },
+    error: function(jqXHR, textStatus, errorThrown) {
+      console.error(textStatus + ': ' + errorThrown);
+      // console.error(jqXHR.statusText);
+      if (textStatus === "timeout") {
+        clearTimeout(dataRefreshTimeout);
+        $('#error_text').html('Pre dugo je vremena proteklo bez odgovora servera. Automatsko osvježavanje isključeno.');
+      } else {
+        $('#error_text').html('Za odabranu funkciju potrebno je odobrenje.');
+      }
+      $('#error').removeClass('hidden').addClass('in');
+    }
   });
 }
 
