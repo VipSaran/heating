@@ -8,12 +8,12 @@ var dataRefreshTimeout;
 
 var refreshImage = function(cb) {
   var url = document.URL + 'refresh_image';
-  console.log('URL=' + url);
+  console.log('URL=', url);
   $.ajax({
     url: url,
     dataType: "json",
     success: function(data, textStatus, jqXHR) {
-      console.log('/refresh_image API response received: ' + data);
+      console.log('/refresh_image API response received:', data);
       if (data) {
         $("#graph_day").html($("<img />", {
           src: "assets-local/img/temperatures_graph.png",
@@ -35,7 +35,7 @@ var refreshImage = function(cb) {
       }
     },
     error: function(jqXHR, textStatus, errorThrown) {
-      console.error(textStatus + ': ' + errorThrown);
+      console.error(textStatus, errorThrown);
       if (textStatus === "timeout") {
         clearTimeout(dataRefreshTimeout);
         $('#error_text').html('Pre dugo je vremena proteklo bez odgovora servera. Automatsko osvježavanje isključeno.');
@@ -54,12 +54,12 @@ var refreshImage = function(cb) {
 
 var refreshTemps = function() {
   var url = document.URL + 'get_temps';
-  console.log('URL=' + url);
+  console.log('URL=', url);
   $.ajax({
     url: url,
     dataType: "json",
     success: function(data, textStatus, jqXHR) {
-      console.log('/get_temps API response received: ' + JSON.stringify(data));
+      console.log('/get_temps API response received:', data);
 
       $("#temp_osijek").html(data.temp_osijek);
       $("#temp_preset").html(data.temp_preset);
@@ -69,7 +69,7 @@ var refreshTemps = function() {
       $('#log').html('Posljednji puta osvježeno: ' + lastRefreshed);
     },
     error: function(jqXHR, textStatus, errorThrown) {
-      console.error(textStatus + ': ' + errorThrown);
+      console.error(textStatus, errorThrown);
       if (textStatus === "timeout") {
         clearTimeout(dataRefreshTimeout);
         $('#error_text').html('Pre dugo je vremena proteklo bez odgovora servera. Automatsko osvježavanje isključeno.');
@@ -101,12 +101,12 @@ var refreshData = function() {
 
 var setPresetTemp = function(value) {
   var url = document.URL + 'set_preset_temp/' + value;
-  console.log('URL=' + url);
+  console.log('URL=', url);
   $.ajax({
     url: url,
     dataType: "json",
     success: function(data, textStatus, jqXHR) {
-      console.log('/set_preset_temp API response received: ' + JSON.stringify(data));
+      console.log('/set_preset_temp API response received:', data);
       $("#temp_osijek").html(data.temp_osijek);
       $("#temp_preset").html(data.temp_preset);
       $("#temp_living").html(data.temp_living);
@@ -115,7 +115,7 @@ var setPresetTemp = function(value) {
       $('#log').html('Posljednji puta osvježeno: ' + lastRefreshed);
     },
     error: function(jqXHR, textStatus, errorThrown) {
-      console.error(textStatus + ': ' + errorThrown);
+      console.error(textStatus, errorThrown);
       // console.error(jqXHR.statusText);
       if (textStatus === "timeout") {
         clearTimeout(dataRefreshTimeout);
@@ -130,16 +130,16 @@ var setPresetTemp = function(value) {
 
 var updateSwitchState = function() {
   var url = document.URL + 'get_heating_switch';
-  console.log('URL=' + url);
+  console.log('URL=', url);
   $.ajax({
     url: url,
     dataType: "json",
     success: function(data, textStatus, jqXHR) {
-      console.log('/get_heating_switch API response received: ' + data);
+      console.log('/get_heating_switch API response received:', data);
       $("input#myonoffswitch").prop('checked', data);
     },
     error: function(jqXHR, textStatus, errorThrown) {
-      console.error(textStatus + ': ' + errorThrown);
+      console.error(textStatus, errorThrown);
       // console.error(jqXHR.statusText);
       if (textStatus === "timeout") {
         clearTimeout(dataRefreshTimeout);
@@ -155,16 +155,16 @@ var updateSwitchState = function() {
 var switchHeating = function() {
   var state = getSwitchBinaryState();
   var url = document.URL + 'switch_heating/' + state;
-  console.log('URL=' + url);
+  console.log('URL=', url);
   $.ajax({
     url: url,
     dataType: "json",
     success: function(data, textStatus, jqXHR) {
-      console.log('/switch_heating API response received: ' + data);
+      console.log('/switch_heating API response received:', data);
       $("input#myonoffswitch").prop('checked', data);
     },
     error: function(jqXHR, textStatus, errorThrown) {
-      console.error(textStatus + ': ' + errorThrown);
+      console.error(textStatus, errorThrown);
       // console.error(jqXHR.statusText);
       if (textStatus === "timeout") {
         clearTimeout(dataRefreshTimeout);

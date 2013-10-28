@@ -16,8 +16,8 @@ var getTemp = function(cb) {
   console.log('weather-tools.getTemp()');
   forecast.get(latitude, longitude, options, function(err, res, data) {
     if (err) throw err;
-    // console.log('res: ' + util.inspect(res));
-    // console.log('data: ' + util.inspect(data));
+    // console.log('  res:', util.inspect(res));
+    // console.log('  data:', util.inspect(data));
 
     // var tempF = data.currently.temperature;
     // var roundTempF = tempF.toFixed(1);
@@ -25,8 +25,8 @@ var getTemp = function(cb) {
     var tempC = ((data.currently.temperature - 32) * 5 / 9);
     var roundTempC = tempC.toFixed(1);
 
-    // console.log('temp (F): ' + roundTempF + ' (' + tempF + ')');
-    // console.log('temp (C): ' + roundTempC + ' (' + tempC + ')');
+    // console.log('  temp (F):', roundTempF, tempF);
+    // console.log('  temp (C):', roundTempC, tempC);
 
     if (typeof(cb) == "function") {
       cb(roundTempC);

@@ -9,10 +9,10 @@ var img_name_month = "temperatures_graph_month.png";
 
 function execute(command, callback) {
   exec(command, function(error, stdout, stderr) {
-    console.log(" command: " + command);
-    console.log(" error: " + error);
-    console.log(" stdout: " + stdout);
-    console.log(" stderr: " + stderr);
+    console.log("  command: ", command);
+    console.log("  error: ", error);
+    console.log("  stdout: ", stdout);
+    console.log("  stderr: ", stderr);
     callback(stdout, stderr);
   });
 }
@@ -106,7 +106,7 @@ var getLastTemps = function(cb) {
       var lines = out.replace(/\r\n/g, "\n").split("\n");
 
       var tabs = lines[2].split(" ");
-      console.log("  tabs: " + tabs);
+      // console.log("  tabs:", tabs);
 
       temps = {
         "temp_preset": tabs[1],
@@ -126,7 +126,7 @@ var getLastTemps = function(cb) {
       }
 
     } catch (err) {
-      console.log("  Parsing error: " + err);
+      console.error("  Parsing error: ", err);
       if (typeof(cb) == "function") {
         temps = {
           "temp_preset": 23,

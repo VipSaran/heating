@@ -33,7 +33,7 @@ app.configure(function() {
 });
 
 function isFromLAN(ip) {
-  console.log('isFromLAN(' + ip + ')');
+  console.log('isFromLAN()', ip);
   if (ip === '127.0.0.1') {
     return true;
   }
@@ -41,9 +41,9 @@ function isFromLAN(ip) {
   try {
     var lastDot = ip.lastIndexOf('.');
     var first3Octets = ip.substring(0, lastDot);
-    // console.log('first3Octets=' + first3Octets);
+    // console.log('first3Octets=', first3Octets);
     // var lastOctet = ip.substring(lastDot + 1);
-    // console.log('lastOctet=' + lastOctet);
+    // console.log('lastOctet=', lastOctet);
     if (first3Octets === '192.168.2') {
       return true;
     }
@@ -70,7 +70,7 @@ var auth = function(req, res, next) {
 }
 
 app.get('/switch_heating/:value', auth, function(req, res) {
-  console.log('/switch_heating/' + req.params.value);
+  console.log('/switch_heating/:', req.params.value);
 
   gpio_tools.switchHeating((req.params.value * 1) == 1, function(state) {
     res.send(state);
@@ -86,7 +86,7 @@ app.get('/get_heating_switch', function(req, res) {
 });
 
 app.get('/set_preset_temp/:value', auth, function(req, res) {
-  console.log('/set_preset_temp/' + req.params.value);
+  console.log('/set_preset_temp/:', req.params.value);
 
   if (req.params.value == 'dec') {
     last_temp_preset--;
@@ -191,8 +191,8 @@ function collectAndRecordCurrTemps() {
   weather_tools.getTemp(function(value) {
     last_temp_osijek = value;
 
-    console.log('temp_living=' + last_temp_living);
-    console.log('temp_osijek=' + last_temp_osijek);
+    console.log('  temp_living=', last_temp_living);
+    console.log('  temp_osijek=', last_temp_osijek);
 
     rrdb_tools.insertTemps(ts, last_temp_preset, last_temp_living, last_temp_osijek);
 

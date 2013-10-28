@@ -7,10 +7,10 @@ var tempLivingSensorId = '28-000004d56dad';
 
 function execute(command, callback) {
   exec(command, function(error, stdout, stderr) {
-    console.log("command: " + command);
-    console.log("error: " + error);
-    console.log("stdout: " + stdout);
-    console.log("stderr: " + stderr);
+    console.log("  command: ", command);
+    console.log("  error: ", error);
+    console.log("  stdout: ", stdout);
+    console.log("  stderr: ", stderr);
     callback(stdout, stderr);
   });
 };
@@ -26,7 +26,7 @@ var init = function() {
 }
 
 var getTempLiving = function(last_temp_living, cb) {
-  console.log('gpio-tools.getTempLiving(' + last_temp_living + ')');
+  console.log('gpio-tools.getTempLiving()', last_temp_living);
   // var readStr = "cat /sys/bus/w1/devices/" + tempLivingSensorId + "/w1_slave | grep t= | cut -f2 -d= | awk '{print $1/1000}'";
   var readStr = "cat /sys/bus/w1/devices/" + tempLivingSensorId + "/w1_slave";
 
@@ -45,15 +45,15 @@ var getTempLiving = function(last_temp_living, cb) {
           tempLiving = last_temp_living;
         } else {
           var crc_OK = lines[0].substring(lines[0].length - 3) == "YES";
-          // console.log('  crc=' + crc_OK);
+          // console.log('  crc=', crc_OK);
 
           if (crc_OK) {
             var temp = lines[1].substring(lines[1].indexOf('t=') + 2);
-            // console.log('  temp=' + temp);
+            // console.log('  temp=', temp);
 
             if (!isNaN(temp)) {
               tempLiving = parseFloat(temp / 1000).toFixed(1);
-              console.log('  tempLiving=' + tempLiving);
+              console.log('  tempLiving=', tempLiving);
 
               if (tempLiving < 1 || tempLiving > 30) {
                 console.error('  ERROR: Value outside of reasonable range.');
@@ -69,7 +69,7 @@ var getTempLiving = function(last_temp_living, cb) {
           }
         }
       } catch (exception) {
-        console.error('  ERROR: Exception caught while parsing: ' + exception);
+        console.error('  ERROR: Exception caught while parsing: ', exception);
         tempLiving = last_temp_living;
       }
     }
@@ -114,11 +114,11 @@ var getHeaterState = function(cb) {
 }
 
 var regulateHeating = function(turnOn) {
-  console.log('gpio-tools.regulateHeating(' + turnOn + ')');
+  console.log('gpio-tools.regulateHeating()', turnOn);
 
   if (!config.heatingSwitch) {
     getHeaterState(function(heaterState) {
-      console.log('  heaterState=' + heaterState);
+      console.log('  heaterState=', heaterState);
       if (heaterState) {
         // set heater 0 & delete dummyHeaterState var
         dummyHeaterState = false;
@@ -131,7 +131,7 @@ var regulateHeating = function(turnOn) {
   }
 
   getHeaterState(function(heaterState) {
-    console.log('  heaterState=' + heaterState);
+    console.log('  heaterState=', heaterState);
     if (turnOn) {
       if (!heaterState) {
         clearTimeout(pumpOffTimeout);
@@ -169,7 +169,7 @@ var getHeatingSwitch = function(cb) {
   console.log('gpio-tools.getHeatingSwitch()');
 
   if (typeof(cb) == "function") {
-    console.log("  config.heatingSwitch = " + config.heatingSwitch)
+    console.log("  config.heatingSwitch = ", config.heatingSwitch)
     cb(config.heatingSwitch);
   }
 }
@@ -177,13 +177,13 @@ var getHeatingSwitch = function(cb) {
 // a soft switch enabling or disabling the regulation
 // only overrides temperature regulation for switched off state
 var switchHeating = function(turnOn, cb) {
-  console.log('gpio-tools.switchHeating(' + turnOn + ')');
+  console.log('gpio-tools.switchHeating()', turnOn);
 
   config.heatingSwitch = turnOn;
 
   if (!turnOn) {
     getHeaterState(function(heaterState) {
-      console.log('  heaterState=' + heaterState);
+      console.log('  heaterState=', heaterState);
       if (heaterState) {
 
         // set heater 0 & delete dummyHeaterState var

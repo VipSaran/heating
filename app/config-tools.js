@@ -39,11 +39,11 @@ var readConfig = function(cb) {
 
   fs.readFile(app_dir + '/' + config_file_name, 'utf8', function(err, data_json) {
     if (err) {
-      console.error(err);
+      console.error('  error=', err);
       heatingSwitch = true;
     } else {
       var data = JSON.parse(data_json);
-      console.log(data);
+      console.log('  config=', data);
       heatingSwitch = data.heatingSwitch;
     }
 
@@ -62,7 +62,7 @@ var writeConfig = function(cb) {
 
   fs.writeFile(app_dir + '/' + config_file_name, JSON.stringify(config), function(err) {
     if (err) {
-      console.error(err);
+      console.error('  error=', err);
     } else {
       console.log('  config.json written');
     }
@@ -92,11 +92,11 @@ var readTimeTable = function(cb) {
   } else {
     fs.readFile(app_dir + '/' + timetable_file_name, 'utf8', function(err, data_json) {
       if (err) {
-        console.error(err);
+        console.error('  error=', err);
         timeTableData = null;
       } else {
         timeTableData = JSON.parse(data_json);
-        console.log(timeTableData);
+        console.log("  time-table data=", timeTableData);
       }
 
       if (typeof(cb) == "function") {
@@ -110,7 +110,7 @@ var getTimeTableTemp = function() {
   console.log("config-tools.getTimeTableTemp()");
 
   var now = new Date();
-  // console.log('  now=' + now);
+  // console.log('  now=', now);
   var presets;
 
   if (now.isWeekday()) {
@@ -120,14 +120,13 @@ var getTimeTableTemp = function() {
   }
 
   var currHour = now.getHours();
-  // console.log('  currHour=' + currHour);
+  // console.log('  currHour=', currHour);
   var currMinute = now.getMinutes();
-  // console.log('  currMinute=' + currMinute);
+  // console.log('  currMinute=', currMinute);
 
   var matchingPreset;
   for (var i = presets.length - 1; i >= 0; i--) {
-    // console.log('  presets[' + i + ']=');
-    // console.log(presets[i]);
+    // console.log('  presets[' + i + ']=', presets[i]);
     var presetHour = presets[i].from[0];
     var presetMinute = presets[i].from[1];
     if (presetHour > currHour) {
@@ -147,7 +146,7 @@ var getTimeTableTemp = function() {
       // time < first preset today = time > last preset yesterday
       // console.log('  continuation of "night" from previous day');
       var yesterday = new Date(now.getTime() - (24 * 60 * 60 * 1000));
-      // console.log('  yesterday=' + yesterday);
+      // console.log('  yesterday=', yesterday);
       if (yesterday.isWeekday()) {
         presets = timeTableData.weekday;
       } else {
@@ -157,10 +156,9 @@ var getTimeTableTemp = function() {
       matchingPreset = presets[presets.length - 1];
     }
   }
-  // console.log('  matchingPreset=');
-  // console.log(matchingPreset);
+  // console.log('  matchingPreset=', matchingPreset);
 
-  console.log('  matchingPreset.temp=' + matchingPreset.temp);
+  console.log('  matchingPreset.temp=', matchingPreset.temp);
   return matchingPreset.temp;
 };
 

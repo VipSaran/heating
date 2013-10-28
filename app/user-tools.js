@@ -17,7 +17,7 @@ User.prototype.isValid = function() {
 };
 
 function addCachedUser(name, valid) {
-  console.log("user-tools.addCachedUser(" + name + ", " + valid + ")");
+  console.log("user-tools.addCachedUser()", name, valid);
   var newUser = {
     name: name,
     valid: valid,
@@ -29,11 +29,11 @@ function addCachedUser(name, valid) {
     },
   };
   cached_users.push(newUser);
-  console.log(cached_users);
+  console.log('  cached_users=', cached_users);
 }
 
 function getCachedUser(name) {
-  console.log("user-tools.getCachedUser(" + name + ")");
+  console.log("user-tools.getCachedUser()", name);
   for (var i = cached_users.length - 1; i >= 0; i--) {
     if (cached_users[i].getName() === name) {
       return cached_users[i];
@@ -43,10 +43,10 @@ function getCachedUser(name) {
 }
 
 var checkCredentials = function(name, pass, cb) {
-  // console.log("user-tools.checkCredentials(" + name + ", " + pass + ")");
+  // console.log("user-tools.checkCredentials()", name, pass);
 
   var cached = getCachedUser(name);
-  console.log(cached);
+  console.log('  cached=', cached);
   if (cached != null) {
     if (typeof(cb) == "function") {
       cb(cached.isValid());
@@ -63,11 +63,11 @@ var checkCredentials = function(name, pass, cb) {
       var valid = false;
 
       var data = JSON.parse(data_json);
-      // console.log(data);
+      // console.log('data=', data);
       for (var i = data.length - 1; i >= 0; i--) {
-        console.log("  data[" + i + "].username=" + data[i].username);
+        console.log("  data[" + i + "].username=", data[i].username);
         if (data[i].username === name) {
-          // console.log("data[" + i + "].password=" + data[i].password);
+          // console.log("  data[" + i + "].password=", data[i].password);
           valid = (pass == data[i].password);
           addCachedUser(name, valid);
           break;
