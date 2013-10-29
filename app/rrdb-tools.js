@@ -41,7 +41,7 @@ function createRRD_state() {
   var createStr = "rrdtool create " + config.app_dir + "/" + config.rrd_state_name + " " + //
   "--start N --step 30 " + // data bucket 30 s long
   "DS:heater_state:GAUGE:60:0:1 " + // heater state (0/1)
-  "RRA:LAST:0:1:2880" // last value in 30 s, for last 1 hour
+  "RRA:AVERAGE:0.5:1:2880" // last value in 30 s, for last 1 hour
 
   execute(createStr, function(out, err) {
     if (err) throw err;
