@@ -73,6 +73,12 @@ body {
 .temp_living {
   color: #D62728;
 }
+.overrideswitch {
+  color: #666;
+  font-weight: 800;
+  font-size: 1em;
+  cursor: pointer;
+}
 
 #progress {
 }

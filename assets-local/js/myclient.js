@@ -128,15 +128,24 @@ var setPresetTemp = function(value) {
   });
 }
 
-var updateSwitchState = function() {
-  var url = document.URL + 'get_heating_switch';
+var updateStates = function() {
+  var url = document.URL + 'get_states';
   console.log('URL=', url);
   $.ajax({
     url: url,
     dataType: "json",
     success: function(data, textStatus, jqXHR) {
-      console.log('/get_heating_switch API response received:', data);
-      $("input#myonoffswitch").prop('checked', data);
+      console.log('/get_states API response received:', data);
+      $("input#overrideswitch").prop('checked', data.overrideSwitch);
+      $("input#myonoffswitch").prop('checked', data.heatingSwitch);
+
+      if (data.overrideSwitch) {
+        $('#temp_preset_inc').removeClass('hidden');
+        $('#temp_preset_dec').removeClass('hidden');
+      } else {
+        $('#temp_preset_inc').addClass('hidden');
+        $('#temp_preset_dec').addClass('hidden');
+      }
     },
     error: function(jqXHR, textStatus, errorThrown) {
       console.error(textStatus, errorThrown);
@@ -152,16 +161,31 @@ var updateSwitchState = function() {
   });
 }
 
-var switchHeating = function() {
-  var state = getSwitchBinaryState();
-  var url = document.URL + 'switch_heating/' + state;
+var switchOverride = function() {
+  var state = getOverrideSwitchBinaryState();
+  var url = document.URL + 'switch_override/' + state;
   console.log('URL=', url);
   $.ajax({
     url: url,
     dataType: "json",
     success: function(data, textStatus, jqXHR) {
-      console.log('/switch_heating API response received:', data);
-      $("input#myonoffswitch").prop('checked', data);
+      console.log('/switch_override API response received:', data);
+      $("input#overrideswitch").prop('checked', state);
+      if (state) {
+        $('#temp_preset_inc').removeClass('hidden');
+        $('#temp_preset_dec').removeClass('hidden');
+      } else {
+        $('#temp_preset_inc').addClass('hidden');
+        $('#temp_preset_dec').addClass('hidden');
+
+        // no override --> use and show temp_preset
+        $("#temp_osijek").html(data.temp_osijek);
+        $("#temp_preset").html(data.temp_preset);
+        $("#temp_living").html(data.temp_living);
+
+        lastRefreshed = new Date().toLocaleString();
+        $('#log').html('Posljednji puta osvježeno: ' + lastRefreshed);
+      }
     },
     error: function(jqXHR, textStatus, errorThrown) {
       console.error(textStatus, errorThrown);
@@ -177,11 +201,48 @@ var switchHeating = function() {
   });
 }
 
-var getSwitchBinaryState = function() {
-  return isSwitchOn() ? 1 : 0;
+var switchHeating = function() {
+  var state = getHeatingSwitchBinaryState();
+  var url = document.URL + 'switch_heating/' + state;
+  console.log('URL=', url);
+  $.ajax({
+    url: url,
+    dataType: "json",
+    success: function(data, textStatus, jqXHR) {
+      console.log('/switch_heating API response received:', data);
+      $("input#myonoffswitch").prop('checked', state);
+      $("#temp_osijek").html(data.temp_osijek);
+      $("#temp_preset").html(data.temp_preset);
+      $("#temp_living").html(data.temp_living);
+
+      lastRefreshed = new Date().toLocaleString();
+      $('#log').html('Posljednji puta osvježeno: ' + lastRefreshed);
+    },
+    error: function(jqXHR, textStatus, errorThrown) {
+      console.error(textStatus, errorThrown);
+      // console.error(jqXHR.statusText);
+      if (textStatus === "timeout") {
+        clearTimeout(dataRefreshTimeout);
+        $('#error_text').html('Pre dugo je vremena proteklo bez odgovora servera. Automatsko osvježavanje isključeno.');
+      } else {
+        $('#error_text').html('Za odabranu funkciju potrebno je odobrenje.');
+      }
+      $('#error').removeClass('hidden').addClass('in');
+    }
+  });
 }
 
-var isSwitchOn = function() {
+var getOverrideSwitchBinaryState = function() {
+  return isOverrideSwitchOn() ? 1 : 0;
+}
+var isOverrideSwitchOn = function() {
+  return $("input#overrideswitch").is(":checked");
+}
+
+var getHeatingSwitchBinaryState = function() {
+  return isHeatingSwitchOn() ? 1 : 0;
+}
+var isHeatingSwitchOn = function() {
   return $("input#myonoffswitch").is(":checked");
 }
 
@@ -193,7 +254,7 @@ $(document).ready(function() {
     $(this).toggleClass('is-hover');
   });
 
-  updateSwitchState();
+  updateStates();
 
   refreshData();
 
@@ -209,6 +270,11 @@ $(document).ready(function() {
 
   $('#temp_preset_inc').click(function() {
     setPresetTemp('inc');
+  });
+
+  $('#overrideswitch').on("click", function(event) {
+    event.preventDefault();
+    switchOverride();
   });
 
   $('#myonoffswitch').on("click", function(event) {

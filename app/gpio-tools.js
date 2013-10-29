@@ -165,21 +165,10 @@ var regulateHeating = function(turnOn) {
   });
 }
 
-var getHeatingSwitch = function(cb) {
-  console.log('gpio-tools.getHeatingSwitch()');
-
-  if (typeof(cb) == "function") {
-    console.log("  config.heatingSwitch = ", config.heatingSwitch)
-    cb(config.heatingSwitch);
-  }
-}
-
 // a soft switch enabling or disabling the regulation
 // only overrides temperature regulation for switched off state
-var switchHeating = function(turnOn, cb) {
+var switchHeating = function(turnOn) {
   console.log('gpio-tools.switchHeating()', turnOn);
-
-  config.heatingSwitch = turnOn;
 
   if (!turnOn) {
     getHeaterState(function(heaterState) {
@@ -198,10 +187,6 @@ var switchHeating = function(turnOn, cb) {
         }, 10000); // 10.000 = 10 s
       }
     });
-  }
-
-  if (typeof(cb) == "function") {
-    getHeatingSwitch(cb);
   }
 }
 
@@ -222,6 +207,5 @@ exports.init = init;
 exports.getTempLiving = getTempLiving;
 exports.getHeaterState = getHeaterState;
 exports.regulateHeating = regulateHeating;
-exports.getHeatingSwitch = getHeatingSwitch;
 exports.switchHeating = switchHeating;
 exports.exitGracefully = exitGracefully;

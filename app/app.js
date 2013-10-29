@@ -69,24 +69,52 @@ var auth = function(req, res, next) {
   }
 }
 
+app.get('/get_states', function(req, res) {
+  console.log('/get_states');
+
+  var states = {
+    "overrideSwitch": config.overrideSwitch,
+    "heatingSwitch": config.heatingSwitch
+  };
+  res.send(states);
+});
+
+app.get('/switch_override/:value', auth, function(req, res) {
+  console.log('/switch_override/:', req.params.value);
+
+  config.overrideSwitch = ((req.params.value * 1) == 1);
+
+  if (!config.overrideSwitch) {
+    last_temp_preset = config.getTimeTableTemp();
+  }
+
+  var temps = {
+    "temp_preset": last_temp_preset,
+    "temp_living": last_temp_living,
+    "temp_osijek": last_temp_osijek
+  };
+  res.send(temps);
+});
+
 app.get('/switch_heating/:value', auth, function(req, res) {
   console.log('/switch_heating/:', req.params.value);
 
-  gpio_tools.switchHeating((req.params.value * 1) == 1, function(state) {
-    res.send(state);
-  });
-});
+  config.heatingSwitch = ((req.params.value * 1) == 1);
 
-app.get('/get_heating_switch', function(req, res) {
-  console.log('/get_heating_switch');
+  gpio_tools.switchHeating(config.heatingSwitch);
 
-  gpio_tools.getHeatingSwitch(function(state) {
-    res.send(state);
-  });
+  var temps = {
+    "temp_preset": last_temp_preset,
+    "temp_living": last_temp_living,
+    "temp_osijek": last_temp_osijek
+  };
+  res.send(temps);
 });
 
 app.get('/set_preset_temp/:value', auth, function(req, res) {
   console.log('/set_preset_temp/:', req.params.value);
+
+  config.overrideSwitch = true;
 
   if (req.params.value == 'dec') {
     last_temp_preset--;
@@ -172,8 +200,10 @@ function collectAndRegulateTemp() {
   gpio_tools.getTempLiving(last_temp_living, function(value) {
     last_temp_living = value;
 
-    // TODO use manual override switch
-    last_temp_preset = config.getTimeTableTemp();
+    if (!config.overrideSwitch) {
+      last_temp_preset = config.getTimeTableTemp();
+    }
+
     // regulate on/off
     var on = (last_temp_preset * 1) > (last_temp_living * 1);
     gpio_tools.regulateHeating(on);

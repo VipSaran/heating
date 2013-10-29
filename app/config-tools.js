@@ -9,6 +9,7 @@ var app_dir = project_dir + "/app";
 var img_dir = project_dir + "/assets-local/img";
 
 var timeTableData;
+var overrideSwitch;
 var heatingSwitch;
 
 (function() {
@@ -40,10 +41,12 @@ var readConfig = function(cb) {
   fs.readFile(app_dir + '/' + config_file_name, 'utf8', function(err, data_json) {
     if (err) {
       console.error('  error=', err);
+      overrideSwitch = false;
       heatingSwitch = true;
     } else {
       var data = JSON.parse(data_json);
       console.log('  config=', data);
+      overrideSwitch = data.overrideSwitch;
       heatingSwitch = data.heatingSwitch;
     }
 
@@ -57,6 +60,7 @@ var writeConfig = function(cb) {
   console.log("config-tools.writeConfig()");
 
   var config = {
+    "overrideSwitch": overrideSwitch,
     "heatingSwitch": heatingSwitch
   };
 
@@ -71,6 +75,15 @@ var writeConfig = function(cb) {
     }
   });
 };
+
+Object.defineProperty(exports, "overrideSwitch", {
+  get: function() {
+    return overrideSwitch;
+  },
+  set: function(value) {
+    overrideSwitch = value;
+  }
+});
 
 Object.defineProperty(exports, "heatingSwitch", {
   get: function() {
