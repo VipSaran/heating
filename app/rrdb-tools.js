@@ -203,26 +203,32 @@ var paintTemps = function(cb) {
 
 
   execute(graphStrDay + graphStrDefaults, function(out, err) {
-    if (err) throw err;
-
-    console.log("  painted DAY");
+    if (err) {
+      console.error(err);
+    } else {
+      console.log("  painted DAY");
+    }
 
     // only update if actually painted
     lastPaintedMillis = currTimeMillis;
 
     execute(graphStrWeek + graphStrDefaults, function(out, err) {
-      if (err) throw err;
-
-      console.log("  painted WEEK");
+      if (err) {
+        console.error(err);
+      } else {
+        console.log("  painted WEEK");
+      }
 
       execute(graphStrMonth + graphStrDefaults, function(out, err) {
-        if (err) throw err;
-
-        console.log("  painted MONTH");
+        if (err) {
+          console.error(err);
+        } else {
+          console.log("  painted MONTH");
+        }
 
         paintTempsAndState(function() {
           if (typeof(cb) == "function") {
-            cb(true); // updated
+            cb(!err); // updated
           }
         });
       });
@@ -244,7 +250,7 @@ var paintTempsAndState = function(cb) {
     'DEF:mytemp_preset=' + config.app_dir + "/" + config.rrd_temps_name + ':temp_preset:AVERAGE ' +
     'DEF:mytemp_living=' + config.app_dir + "/" + config.rrd_temps_name + ':temp_living:AVERAGE ' +
     'DEF:mytemp_osijek=' + config.app_dir + "/" + config.rrd_temps_name + ':temp_osijek:AVERAGE ' +
-    'DEF:myheater_state=' + config.app_dir + "/" + config.rrd_state_name + ':heater_state:LAST ' +
+    'DEF:myheater_state=' + config.app_dir + "/" + config.rrd_state_name + ':heater_state:AVERAGE ' +
     'CDEF:myheater_state_rel=myheater_state,0.5,GT,mytemp_preset,0,IF ' +
     'AREA:myheater_state_rel#FE7F0E:"grijac" ' +
     'LINE:mytemp_osijek#1F77B4:"Osijek" ' +
@@ -252,12 +258,14 @@ var paintTempsAndState = function(cb) {
     'LINE:mytemp_living#D62728:"dnevna soba"';
 
   execute(graphStrHour + graphStrDefaults, function(out, err) {
-    if (err) throw err;
-
-    console.log("  painted HOUR");
+    if (err) {
+      console.error(err);
+    } else {
+      console.log("  painted HOUR");
+    }
 
     if (typeof(cb) == "function") {
-      cb(true); // updated
+      cb(!err); // updated
     }
   });
 };
