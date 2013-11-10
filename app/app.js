@@ -218,8 +218,10 @@ function collectAndRecordCurrTemps() {
   console.log('collectAndRecordCurrTemps()');
   var ts = Math.round(new Date().getTime() / 1000);
 
-  weather_tools.getTemp(function(value) {
-    last_temp_osijek = value;
+  weather_tools.getTemp(function(value, error) {
+    if (!error) {
+      last_temp_osijek = value;
+    }
 
     console.log('  temp_living=', last_temp_living);
     console.log('  temp_osijek=', last_temp_osijek);

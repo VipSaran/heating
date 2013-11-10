@@ -13,7 +13,7 @@ function execute(command, callback) {
     console.log("  stderr: ", stderr);
     callback(stdout, stderr);
   });
-};
+}
 
 var init = function() {
   console.log('gpio-tools.init()');

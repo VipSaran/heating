@@ -14,22 +14,36 @@ var options = {
 
 var getTemp = function(cb) {
   console.log('weather-tools.getTemp()');
+
   forecast.get(latitude, longitude, options, function(err, res, data) {
-    if (err) throw err;
-    // console.log('  res:', util.inspect(res));
-    // console.log('  data:', util.inspect(data));
+    if (err) {
+      console.error(err);
 
-    // var tempF = data.currently.temperature;
-    // var roundTempF = tempF.toFixed(1);
+      if (typeof(cb) == "function") {
+        cb(0, err);
+      }
+    } else {
+      try {
+        // console.log('  res:', util.inspect(res));
+        // console.log('  data:', util.inspect(data));
 
-    var tempC = ((data.currently.temperature - 32) * 5 / 9);
-    var roundTempC = tempC.toFixed(1);
+        // var tempF = data.currently.temperature;
+        // var roundTempF = tempF.toFixed(1);
 
-    // console.log('  temp (F):', roundTempF, tempF);
-    // console.log('  temp (C):', roundTempC, tempC);
+        var tempC = ((data.currently.temperature - 32) * 5 / 9);
+        var roundTempC = tempC.toFixed(1);
 
-    if (typeof(cb) == "function") {
-      cb(roundTempC);
+        // console.log('  temp (F):', roundTempF, tempF);
+        // console.log('  temp (C):', roundTempC, tempC);
+
+        if (typeof(cb) == "function") {
+          cb(roundTempC);
+        }
+      } catch (exception) {
+        if (typeof(cb) == "function") {
+          cb(0, exception);
+        }
+      }
     }
   });
 }

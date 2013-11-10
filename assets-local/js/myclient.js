@@ -248,7 +248,9 @@ var isHeatingSwitchOn = function() {
 
 
 $(document).ready(function() {
-  $('.carousel').carousel();
+  $('.carousel').carousel({
+    interval: false
+  });
 
   $(".carousel-control").hover(function() {
     $(this).toggleClass('is-hover');
