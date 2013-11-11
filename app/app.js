@@ -228,7 +228,7 @@ function collectAndRecordCurrTemps() {
 
     rrdb_tools.insertTemps(ts, last_temp_preset, last_temp_living, last_temp_osijek);
 
-    cloud_tools.publishDataOnline(last_temp_preset, last_temp_living, last_temp_osijek);
+    // cloud_tools.publishDataOnline(last_temp_preset, last_temp_living, last_temp_osijek);
   })
 }
 
