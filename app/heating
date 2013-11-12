@@ -1,14 +1,15 @@
 #!/bin/bash
 
 FOREVER=/usr/local/bin/forever
+LOG_OPTIONS="--append -l /home/pi/logs/heating.log -o /home/pi/logs/heating_stdout.log -e /home/pi/logs/heating_stderr.err"
 SERVER_JS_FILE=/home/pi/nodejs/heating/app/app.js 
 USER=pi
 
 case "$1" in
 
 start)
-  echo "starting forever: $FOREVER start $SERVER_JS_FILE"
-  sudo -u $USER $FOREVER start $SERVER_JS_FILE
+  echo "starting forever: $FOREVER start $LOG_OPTIONS $SERVER_JS_FILE"
+  sudo -u $USER $FOREVER start $LOG_OPTIONS $SERVER_JS_FILE
   ;;
 
 stop)
