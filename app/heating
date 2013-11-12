@@ -1,8 +1,8 @@
 #!/bin/bash
 
 FOREVER=/usr/local/bin/forever
-LOG_OPTIONS="--append -l /home/pi/logs/heating.log -o /home/pi/logs/heating_stdout.log -e /home/pi/logs/heating_stderr.err"
-SERVER_JS_FILE=/home/pi/nodejs/heating/app/app.js 
+LOG_OPTIONS="--append -o /home/pi/logs/heating.log -e /home/pi/logs/heating.err"
+SERVER_JS_FILE=/home/pi/nodejs/heating/app/app.js
 USER=pi
 
 case "$1" in
@@ -13,7 +13,7 @@ start)
   ;;
 
 stop)
-  killall $FOREVER
+  $FOREVER stopall
   ;;
 
 *)
