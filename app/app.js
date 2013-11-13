@@ -186,7 +186,7 @@ function initTimers() {
 
   tempRegulateInterval = setInterval(function() {
     collectAndRegulateTemp();
-  }, 10000); // 10.000 = 10 s
+  }, 15000); // 15.000 = 15 s
 
   tempCollectInterval = setInterval(function() {
     collectAndRecordCurrTemps();
