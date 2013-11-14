@@ -245,15 +245,14 @@ var paintTempsAndState = function(cb) {
 
   var graphStrDefaults = '--font DEFAULT:0:"Droid Sans" ' +
     '--vertical-label "°C" --border 0 --zoom 2 --slope-mode ' +
+    '--lower-limit 17 --upper-limit 23 --rigid ' +
     '--color CANVAS#FFFFFF00 --color FRAME#000000FF --color BACK#FFFFFF00 ' +
     'TEXTALIGN:center ' +
     'DEF:mytemp_preset=' + config.app_dir + "/" + config.rrd_temps_name + ':temp_preset:AVERAGE ' +
     'DEF:mytemp_living=' + config.app_dir + "/" + config.rrd_temps_name + ':temp_living:AVERAGE ' +
-    'DEF:mytemp_osijek=' + config.app_dir + "/" + config.rrd_temps_name + ':temp_osijek:AVERAGE ' +
     'DEF:myheater_state=' + config.app_dir + "/" + config.rrd_state_name + ':heater_state:AVERAGE ' +
     'CDEF:myheater_state_rel=myheater_state,0.5,GT,mytemp_preset,0,IF ' +
     'AREA:myheater_state_rel#FE7F0E:"grijac" ' +
-    'LINE:mytemp_osijek#1F77B4:"Osijek" ' +
     'LINE:mytemp_preset#2CA02C:"zadano" ' +
     'LINE:mytemp_living#D62728:"dnevna soba"';
 

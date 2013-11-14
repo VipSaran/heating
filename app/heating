@@ -13,7 +13,7 @@ start)
   ;;
 
 stop)
-  $FOREVER stopall
+  sudo -u $USER $FOREVER stop $SERVER_JS_FILE
   ;;
 
 *)

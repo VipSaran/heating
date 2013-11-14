@@ -1,8 +1,8 @@
 {
   "weekday": [{
     "name": "morning",
-    "from": [6, 45],
-    "temp": 23
+    "from": [6, 30],
+    "temp": 22
   }, {
     "name": "forenoon",
     "from": [8, 30],
@@ -10,11 +10,11 @@
   }, {
     "name": "afternoon",
     "from": [15, 30],
-    "temp": 22
+    "temp": 21
   }, {
     "name": "evening",
     "from": [19, 0],
-    "temp": 23
+    "temp": 22
   }, {
     "name": "night",
     "from": [22, 45],
@@ -22,16 +22,16 @@
   }],
   "weekend": [{
     "name": "morning",
-    "from": [7, 45],
-    "temp": 23
+    "from": [7, 30],
+    "temp": 22
   }, {
     "name": "forenoon",
     "from": [9, 30],
-    "temp": 22
+    "temp": 21
   }, {
     "name": "evening",
     "from": [19, 0],
-    "temp": 23
+    "temp": 22
   }, {
     "name": "night",
     "from": [23, 15],
