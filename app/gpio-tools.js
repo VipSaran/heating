@@ -124,7 +124,7 @@ var getHeaterState = function(cb) {
 
   gpio.read(gpioPinHeater, function(err, value) {
     if (err) throw err;
-    console.log('  Heater state', value);
+    console.log('  heaterState=', value);
     if (typeof(cb) == "function") {
       cb(value);
     }
@@ -162,7 +162,6 @@ var regulateHeating = function(turnOn) {
 
   if (!config.heatingSwitch) {
     getHeaterState(function(heaterState) {
-      console.log('  heaterState=', heaterState);
       if (heaterState) {
         setHeaterState(0);
       }
@@ -173,7 +172,6 @@ var regulateHeating = function(turnOn) {
   }
 
   getHeaterState(function(heaterState) {
-    console.log('  heaterState=', heaterState);
     if (turnOn) {
       if (!heaterState) {
         clearTimeout(pumpOffTimeout);
@@ -191,7 +189,7 @@ var regulateHeating = function(turnOn) {
 
         pumpOffTimeout = setTimeout(function() {
           setPumpState(0);
-        }, 300000); // 300.000 = 5 min
+        }, config.delay_pump_off);
       }
     }
   });
@@ -204,8 +202,8 @@ var switchHeating = function(turnOn) {
 
   if (!turnOn) {
     getHeaterState(function(heaterState) {
-      console.log('  heaterState=', heaterState);
       if (heaterState) {
+        clearTimeout(pumpOffTimeout);
 
         setHeaterState(0);
 
