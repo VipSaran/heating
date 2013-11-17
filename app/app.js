@@ -8,6 +8,19 @@ var cloud_tools = require('./cloud-tools');
 
 var app = express();
 
+console.logCopy = console.log.bind(console);
+console.log = function() {
+  // var currentTime = '[' + new Date().toISOString().slice(11, -5) + '] ';
+  var currentTime = '[' + new Date().toString().split(" ")[4] + '] ';
+  this.logCopy(currentTime.concat(Array.prototype.slice.call(arguments)));
+};
+console.errorCopy = console.error.bind(console);
+console.error = function() {
+  // var currentTime = '[' + new Date().toISOString().slice(11, -5) + '] ';
+  var currentTime = '[' + new Date().toString().split(" ")[4] + '] ';
+  this.errorCopy(currentTime.concat(Array.prototype.slice.call(arguments)));
+};
+
 var last_temp_preset = 0;
 var last_temp_living = 0;
 var last_temp_osijek = 0;
