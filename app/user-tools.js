@@ -82,17 +82,3 @@ var checkCredentials = function(name, pass, cb) {
 }
 
 exports.checkCredentials = checkCredentials;
-
-// checkCredentials("vip_saran", "12pero", function(valid) {
-//   console.log("result: " + valid)
-// });
-// setTimeout(function() {
-//   checkCredentials("vip_saran", "12pero", function(valid) {
-//     console.log("result: " + valid)
-//   });
-// }, 2000);
-// setTimeout(function() {
-//   checkCredentials("test", "pass", function(valid) {
-//     console.log("result: " + valid)
-//   });
-// }, 4000);
