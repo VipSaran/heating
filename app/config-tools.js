@@ -86,6 +86,7 @@ Object.defineProperty(exports, "overrideSwitch", {
   },
   set: function(value) {
     overrideSwitch = value;
+    writeConfig();
   }
 });
 
@@ -95,6 +96,7 @@ Object.defineProperty(exports, "heatingSwitch", {
   },
   set: function(value) {
     heatingSwitch = value;
+    writeConfig();
   }
 });
 
