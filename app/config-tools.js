@@ -26,7 +26,7 @@ var heatingSwitch;
   Date.prototype.getDayName = function() {
     return days[this.getDay()];
   };
-  Date.prototype.isWeekday = function() {
+  Date.prototype.isWorkday = function() {
     return (this.getDay() > 0 && this.getDay() < 6);
   };
 })();
@@ -132,8 +132,8 @@ var getTimeTableTemp = function() {
   // console.log('  now=', now);
   var presets;
 
-  if (now.isWeekday()) {
-    presets = timeTableData.weekday;
+  if (now.isWorkday()) {
+    presets = timeTableData.workday;
   } else {
     presets = timeTableData.weekend;
   }
@@ -166,8 +166,8 @@ var getTimeTableTemp = function() {
       // console.log('  continuation of "night" from previous day');
       var yesterday = new Date(now.getTime() - (24 * 60 * 60 * 1000));
       // console.log('  yesterday=', yesterday);
-      if (yesterday.isWeekday()) {
-        presets = timeTableData.weekday;
+      if (yesterday.isWorkday()) {
+        presets = timeTableData.workday;
       } else {
         presets = timeTableData.weekend;
       }
