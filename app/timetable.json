@@ -5,7 +5,7 @@
     "temp": 22
   }, {
     "name": "forenoon",
-    "from": [8, 30],
+    "from": [8, 00],
     "temp": 19
   }, {
     "name": "afternoon",
