@@ -1,5 +1,5 @@
 {
-  "weekday": [{
+  "workday": [{
     "name": "morning",
     "from": [6, 30],
     "temp": 22
