@@ -267,7 +267,7 @@ var shouldStartHeating = function(millis, temp_preset, temp_living, temp_osijek)
 
     if (target.temp > temp_living && target.temp > temp_preset) {
       // see how much we should heat
-      var tempDiffToReach = target.temp - temp_living;
+      var tempDiffToReach = parseFloat(target.temp - temp_living).toFixed(2);
       console.log('  tempDiffToReach=', tempDiffToReach);
 
       var delta = temp_living - temp_osijek;
