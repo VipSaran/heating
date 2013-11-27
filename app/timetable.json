@@ -1,19 +1,19 @@
 {
   "workday": [{
     "name": "morning",
-    "from": [6, 30],
-    "temp": 22
+    "from": [7, 0],
+    "temp": 21
   }, {
     "name": "forenoon",
     "from": [8, 0],
     "temp": 19
   }, {
     "name": "afternoon",
-    "from": [15, 30],
+    "from": [15, 45],
     "temp": 21
   }, {
     "name": "evening",
-    "from": [19, 0],
+    "from": [20, 0],
     "temp": 22
   }, {
     "name": "night",
@@ -22,7 +22,7 @@
   }],
   "weekend": [{
     "name": "morning",
-    "from": [7, 30],
+    "from": [8, 0],
     "temp": 22
   }, {
     "name": "forenoon",
@@ -30,7 +30,7 @@
     "temp": 21
   }, {
     "name": "evening",
-    "from": [19, 0],
+    "from": [18, 0],
     "temp": 22
   }, {
     "name": "night",

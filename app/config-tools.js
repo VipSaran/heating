@@ -125,10 +125,14 @@ var readTimeTable = function(cb) {
   }
 };
 
-var getTimeTableTemp = function() {
+var getTimeTableTemp = function(millis) {
   console.log("config-tools.getTimeTableTemp()");
 
-  var now = new Date();
+  if (millis === undefined) {
+    millis = new Date().getTime();
+  }
+
+  var now = new Date(millis);
   // console.log('  now=', now);
   var presets;
 
@@ -181,6 +185,127 @@ var getTimeTableTemp = function() {
   return matchingPreset.temp;
 };
 
+var getNextTimeTable = function(millis) {
+  console.log("config-tools.getNextTimeTable()");
+
+  if (millis === undefined) {
+    millis = new Date().getTime();
+  }
+
+  var now = new Date(millis);
+  // console.log('  now=', now);
+  var presets;
+
+  if (now.isWorkday()) {
+    presets = timeTableData.workday;
+  } else {
+    presets = timeTableData.weekend;
+  }
+
+  var currHour = now.getHours();
+  // console.log('  currHour=', currHour);
+  var currMinute = now.getMinutes();
+  // console.log('  currMinute=', currMinute);
+
+  var futurePreset;
+  for (var i = presets.length - 1; i >= 0; i--) {
+    // console.log('  presets[' + i + ']=', presets[i]);
+
+    var presetHour = presets[i].from[0];
+    var presetMinute = presets[i].from[1];
+    if (presetHour > currHour) {
+      // console.log('  1 future --> continue search');
+      futurePreset = presets[i];
+    } else if (presetHour == currHour && presetMinute > currMinute) {
+      // console.log('  2 future --> continue search');
+      futurePreset = presets[i];
+    } else if (futurePreset !== undefined) {
+      // console.log('  break');
+      break;
+    }
+
+    if (i == 0 && futurePreset === undefined) {
+      // time > last preset today = time < first preset tomorrow
+      // console.log('  target is "morning" of next day');
+      var tomorrow = new Date(now.getTime() + (24 * 60 * 60 * 1000));
+      // console.log('  tomorrow=', tomorrow);
+      if (tomorrow.isWorkday()) {
+        presets = timeTableData.workday;
+      } else {
+        presets = timeTableData.weekend;
+      }
+
+      futurePreset = presets[0];
+    }
+  }
+  // console.log('  futurePreset=', futurePreset);
+
+  // console.log('  futurePreset.temp=', futurePreset.temp);
+
+  // console.log('## elapsed:', new Date().getTime() - now.getTime());
+  return futurePreset;
+};
+
+var shouldStartHeating = function(millis, temp_preset, temp_living, temp_osijek) {
+  console.log("config-tools.shouldStartHeating()", temp_preset, temp_living, temp_osijek);
+
+  if (millis === undefined) {
+    millis = new Date().getTime();
+  }
+
+  var now = new Date(millis);
+  // console.log('  now=', now);
+
+  var should = false;
+  if (temp_preset > temp_living) {
+    console.log('  heating needed now');
+    should = true;
+  } else {
+    // we're above preset temp, but next preset could require heating --> check it
+    var target = getNextTimeTable(now);
+    // console.log('  target=', target);
+
+    if (target.temp > temp_living && target.temp > temp_preset) {
+      // see how much we should heat
+      var tempDiffToReach = target.temp - temp_living;
+      // console.log('  tempDiffToReach=', tempDiffToReach);
+
+      var delta = temp_living - temp_osijek;
+      // console.log('  delta=', delta);
+
+      var Cph = 3 - (0.1 * delta);
+      // console.log('  Cph=', Cph);
+
+      // see how long to reach that heat
+      var timeToReachTempDiff = parseFloat(tempDiffToReach / Cph).toFixed(2);
+      // console.log('  timeToReachTempDiff=', timeToReachTempDiff, 'hours');
+
+      var hourMillis = 60 * 60 * 1000;
+      var timeToReachTempDiffMillis = Math.round(timeToReachTempDiff * hourMillis);
+      // console.log('  timeToReachTempDiffMillis=', timeToReachTempDiffMillis);
+
+      var target_hour = target.from[0];
+      var target_minute = target.from[1];
+      // is target is tomorrow, add 1 day
+      var target_date = new Date(now.getFullYear(), now.getMonth(), target_hour < now.getHours() ? now.getDate() + 1 : now.getDate(), target_hour, target_minute, 0, 0);
+      // console.log('  target_date=', target_date);
+      // console.log('  target_date_millis=', target_date.getTime());
+      var shouldStartAt = target_date.getTime() - timeToReachTempDiffMillis;
+      // console.log('  shouldStartAt_millis=', shouldStartAt);
+      // console.log('  shouldStartAt=', new Date(shouldStartAt));
+      // console.log('  now=', now.getTime());
+
+      if (shouldStartAt < now.getTime()) {
+        console.log('  heating needed now to reach goal (' + tempDiffToReach + ' C) in ' + timeToReachTempDiff + ' h');
+        should = true;
+      }
+    }
+  }
+
+  console.log('  shouldStartHeating=', should);
+  return should;
+};
+
 exports.app_dir = app_dir; // read-only var
 exports.rrd_temps_name = rrd_temps_name; // read-only var
 exports.rrd_state_name = rrd_state_name; // read-only var
@@ -191,3 +316,4 @@ exports.delay_pump_off = delay_pump_off; // read-only var
 exports.init = init;
 exports.writeConfig = writeConfig;
 exports.getTimeTableTemp = getTimeTableTemp;
+exports.shouldStartHeating = shouldStartHeating;
