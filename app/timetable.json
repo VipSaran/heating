@@ -22,15 +22,15 @@
   }],
   "weekend": [{
     "name": "morning",
-    "from": [8, 0],
-    "temp": 22
+    "from": [8, 30],
+    "temp": 21
   }, {
     "name": "forenoon",
     "from": [9, 30],
     "temp": 21
   }, {
     "name": "evening",
-    "from": [18, 0],
+    "from": [19, 0],
     "temp": 22
   }, {
     "name": "night",
