@@ -218,8 +218,9 @@ function collectAndRegulateTemp() {
     }
 
     // regulate on/off
-    var on = (last_temp_preset * 1) > (last_temp_living * 1);
-    gpio_tools.regulateHeating(on);
+    gpio_tools.regulateHeating(
+      config.shouldStartHeating(undefined, last_temp_preset, last_temp_living, last_temp_osijek)
+    );
   });
 
   gpio_tools.getHeaterState(function(state) {
