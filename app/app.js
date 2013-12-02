@@ -141,6 +141,9 @@ app.get('/set_preset_temp/:value', auth, function(req, res) {
     "temp_osijek": last_temp_osijek
   };
   res.send(temps);
+
+  // regulate_interval = 30s --> regulate now
+  collectAndRegulateTemp();
 });
 
 app.get('/get_temps', function(req, res) {

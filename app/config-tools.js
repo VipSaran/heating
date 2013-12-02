@@ -8,7 +8,7 @@ var project_dir = "/home/pi/nodejs/heating";
 var app_dir = project_dir + "/app";
 var img_dir = project_dir + "/assets-local/img";
 
-var regulate_interval = 15000; // 15.000 = 15 s
+var regulate_interval = 30000; // 30.000 = 30 s
 var collect_record_interval = 120000; // 120.000 = 2 min
 var delay_pump_off = 300000; // 300.000 = 5 min
 
