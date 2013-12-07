@@ -146,7 +146,8 @@ var insertTemps = function(ts, temp_preset, temp_living, temp_osijek) {
     ts + ":" + temp_preset + ":" + temp_living + ":" + temp_osijek;
 
   execute(updateStr, function(out, err) {
-    if (err) throw err;
+    if (err)
+      console.error("  " + config.rrd_temps_name + " update error:", err);
   });
 };
 
@@ -157,7 +158,8 @@ var insertState = function(ts, heater_state) {
     ts + ":" + heater_state;
 
   execute(updateStr, function(out, err) {
-    if (err) throw err;
+    if (err)
+      console.error("  " + config.rrd_state_name + " update error:", err);
   });
 };
 

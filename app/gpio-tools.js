@@ -21,32 +21,30 @@ function execute(command, callback) {
 var init = function() {
   console.log('gpio-tools.init()');
 
+  gpio.close(gpioPinHeater, function(err) {
+    if (err) {
+      console.error('  ERROR', err);
+    } else {
+      console.log('  Closed pin', gpioPinHeater);
+    }
+  });
+
+  gpio.close(gpioPinPump, function(err) {
+    if (err) {
+      console.error('  ERROR', err);
+    } else {
+      console.log('  Closed pin', gpioPinPump);
+    }
+  });
+
   async.series([
 
-    // function(callback) {
-    //   gpio.close(gpioPinHeater, function(err) {
-    //     if (err) {
-    //       console.error('  ERROR', err);
-    //     } else {
-    //       console.log('  Closed pin', gpioPinHeater);
-    //     }
-    //   });
-    // },
     function(callback) {
 
       gpio.open(gpioPinHeater, "out", function(err) {
         callback(err, gpioPinHeater);
       });
     },
-    // function(callback) {
-    //   gpio.close(gpioPinPump, function(err) {
-    //     if (err) {
-    //       console.error('  ERROR', err);
-    //     } else {
-    //       console.log('  Closed pin', gpioPinPump);
-    //     }
-    //   });
-    // },
     function(callback) {
 
       gpio.open(gpioPinPump, "out", function(err) {
