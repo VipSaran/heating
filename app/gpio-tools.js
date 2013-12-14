@@ -6,7 +6,9 @@ var config = require('./config-tools');
 var gpioPinHeater = 11; // header pin 11 = BCM GPIO 17 = GPIO/wiringPi 0
 var gpioPinPump = 12; // header pin 12 = BCM GPIO 18 = GPIO/wiringPi 1
 
-var tempLivingSensorId = '28-000004d56dad';
+var tempLivingSensorId = '28.AD6DD5040000'; // on 1-wire master
+var temp2SensorId = '28.FDA005050000'; // on 1-wire master
+var temp3SensorId = '28.1C0805050000'; // on 1-wire master
 
 function execute(command, callback) {
   exec(command, function(error, stdout, stderr) {
@@ -20,6 +22,14 @@ function execute(command, callback) {
 
 var init = function() {
   console.log('gpio-tools.init()');
+
+  // init 1-wire master
+  var init_owserver = "/opt/owfs/bin/owserver --i2c=/dev/i2c-1:ALL"
+  execute(init_owserver, function(out, err) {
+    if (err) {
+      console.error(err);
+    }
+  });
 
   gpio.close(gpioPinHeater, function(err) {
     if (err) {
@@ -62,8 +72,7 @@ var init = function() {
 
 var getTempLiving = function(last_temp_living, cb) {
   console.log('gpio-tools.getTempLiving()', last_temp_living);
-  // var readStr = "cat /sys/bus/w1/devices/" + tempLivingSensorId + "/w1_slave | grep t= | cut -f2 -d= | awk '{print $1/1000}'";
-  var readStr = "cat /sys/bus/w1/devices/" + tempLivingSensorId + "/w1_slave";
+  var readStr = "/opt/owfs/bin/owread " + tempLivingSensorId + "/temperature";
 
   var tempLiving;
   execute(readStr, function(out, err) {
@@ -72,37 +81,23 @@ var getTempLiving = function(last_temp_living, cb) {
       tempLiving = last_temp_living;
     } else {
       try {
-        var lines = out.replace(/\r\n/g, "\n").split("\n");
-        // console.log(lines);
+        // console.log('  out=', out);
+        var temp = out.replace(/^\s+|\s+$/g, '');
+        // console.log('  temp=', temp);
 
-        if (lines == null || lines.length != 3) {
-          console.error('  ERROR: Wrong sensor readout format.');
-          tempLiving = last_temp_living;
-        } else {
-          var crc_OK = lines[0].substring(lines[0].length - 3) == "YES";
-          // console.log('  crc=', crc_OK);
+        if (!isNaN(temp)) {
+          tempLiving = parseFloat(temp).toFixed(1);
+          console.log('  tempLiving=', tempLiving);
 
-          if (crc_OK) {
-            var temp = lines[1].substring(lines[1].indexOf('t=') + 2);
-            // console.log('  temp=', temp);
-
-            if (!isNaN(temp)) {
-              tempLiving = parseFloat(temp / 1000).toFixed(1);
-              console.log('  tempLiving=', tempLiving);
-
-              if (tempLiving < 1 || tempLiving > 30) {
-                console.error('  ERROR: Value outside of reasonable range.');
-                tempLiving = last_temp_living;
-              }
-            } else {
-              console.error('  ERROR: Temperature value not a number.');
-              tempLiving = last_temp_living;
-            }
-          } else {
-            console.error('  ERROR: Sensor readout CRC failed.');
+          if (tempLiving < 1 || tempLiving > 30) {
+            console.error('  ERROR: Value outside of reasonable range.');
             tempLiving = last_temp_living;
           }
+        } else {
+          console.error('  ERROR: Temperature value not a number.');
+          tempLiving = last_temp_living;
         }
+
       } catch (exception) {
         console.error('  ERROR: Exception caught while parsing: ', exception);
         tempLiving = last_temp_living;
