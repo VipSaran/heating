@@ -214,26 +214,10 @@ var paintTemps = function(cb) {
     // only update if actually painted
     lastPaintedMillis = currTimeMillis;
 
-    execute(graphStrWeek + graphStrDefaults, function(out, err) {
-      if (err) {
-        console.error(err);
-      } else {
-        console.log("  painted WEEK");
+    paintTempsAndState(function() {
+      if (typeof(cb) == "function") {
+        cb(!err); // updated
       }
-
-      execute(graphStrMonth + graphStrDefaults, function(out, err) {
-        if (err) {
-          console.error(err);
-        } else {
-          console.log("  painted MONTH");
-        }
-
-        paintTempsAndState(function() {
-          if (typeof(cb) == "function") {
-            cb(!err); // updated
-          }
-        });
-      });
     });
   });
 };
