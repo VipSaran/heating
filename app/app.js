@@ -12,12 +12,22 @@ console.logCopy = console.log.bind(console);
 console.log = function() {
   // var currentTime = '[' + new Date().toISOString().slice(11, -5) + '] ';
   var currentTime = '[' + new Date().toString().split(" ")[4] + '] ';
+  for (var i = 0; i < arguments.length; i++) {
+    if (typeof arguments[i] === 'object') {
+      arguments[i] = JSON.stringify(arguments[i], null, 2);
+    }
+  }
   this.logCopy(currentTime.concat(Array.prototype.slice.call(arguments)));
 };
 console.errorCopy = console.error.bind(console);
 console.error = function() {
   // var currentTime = '[' + new Date().toISOString().slice(11, -5) + '] ';
   var currentTime = '[' + new Date().toString().split(" ")[4] + '] ';
+  for (var i = 0; i < arguments.length; i++) {
+    if (typeof arguments[i] === 'object') {
+      arguments[i] = JSON.stringify(arguments[i], null, 2);
+    }
+  }
   this.errorCopy(currentTime.concat(Array.prototype.slice.call(arguments)));
 };
 
