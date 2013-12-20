@@ -79,6 +79,9 @@ body {
   font-size: 1em;
   cursor: pointer;
 }
+.holidayswitch {
+  font-size: 1.5em;
+}
 
 #progress {
 }

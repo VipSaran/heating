@@ -150,7 +150,7 @@ var getTimeTableTemp = function(millis) {
   // console.log('  now=', now);
   var presets;
 
-  if (now.isWorkday()) {
+  if (!holidaySwitch && now.isWorkday()) {
     presets = timeTableData.workday;
   } else {
     presets = timeTableData.weekend;

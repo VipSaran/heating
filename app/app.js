@@ -48,7 +48,11 @@ app.configure(function() {
 
     initTimers();
     rrdb_tools.getLastTemps(function(data) {
-      last_temp_preset = data.temp_preset;
+      if (config.holidaySwitch) {
+        last_temp_preset = config.getTimeTableTemp();
+      } else {
+        last_temp_preset = data.temp_preset;
+      }
       last_temp_living = data.temp_living;
       last_temp_osijek = data.temp_osijek;
     });
@@ -97,7 +101,8 @@ app.get('/get_states', function(req, res) {
 
   var states = {
     "overrideSwitch": config.overrideSwitch,
-    "heatingSwitch": config.heatingSwitch
+    "heatingSwitch": config.heatingSwitch,
+    "holidaySwitch": config.holidaySwitch
   };
   res.send(states);
 });
