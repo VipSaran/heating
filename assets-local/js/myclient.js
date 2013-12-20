@@ -42,7 +42,7 @@ var refreshImage = function(cb) {
       }
     }
   });
-}
+};
 
 var refreshTemps = function() {
   var url = document.URL + 'get_temps';
@@ -74,7 +74,7 @@ var refreshTemps = function() {
       $('#progress').modal('hide');
     }
   });
-}
+};
 
 var refreshData = function() {
   clearTimeout(dataRefreshTimeout);
@@ -89,7 +89,7 @@ var refreshData = function() {
   });
 
   refreshImage(refreshTemps);
-}
+};
 
 var setPresetTemp = function(value) {
   var url = document.URL + 'set_preset_temp/' + value;
@@ -118,7 +118,7 @@ var setPresetTemp = function(value) {
       $('#error').removeClass('hidden').addClass('in');
     }
   });
-}
+};
 
 var updateStates = function() {
   var url = document.URL + 'get_states';
@@ -130,6 +130,7 @@ var updateStates = function() {
       console.log('/get_states API response received:', data);
       $("input#overrideswitch").prop('checked', data.overrideSwitch);
       $("input#myonoffswitch").prop('checked', data.heatingSwitch);
+      $("input#holidayswitch").prop('checked', data.holidaySwitch);
 
       if (data.overrideSwitch) {
         $('#temp_preset_inc').removeClass('hidden');
@@ -151,7 +152,7 @@ var updateStates = function() {
       $('#error').removeClass('hidden').addClass('in');
     }
   });
-}
+};
 
 var switchOverride = function() {
   var state = getOverrideSwitchBinaryState();
@@ -191,7 +192,7 @@ var switchOverride = function() {
       $('#error').removeClass('hidden').addClass('in');
     }
   });
-}
+};
 
 var switchHeating = function() {
   var state = getHeatingSwitchBinaryState();
@@ -222,7 +223,40 @@ var switchHeating = function() {
       $('#error').removeClass('hidden').addClass('in');
     }
   });
-}
+};
+
+var switchHoliday = function() {
+  var state = getHolidaySwitchBinaryState();
+  var url = document.URL + 'switch_holiday/' + state;
+  console.log('URL=', url);
+  $.ajax({
+    url: url,
+    dataType: "json",
+    success: function(data, textStatus, jqXHR) {
+      console.log('/switch_holiday API response received:', data);
+      $("input#holidayswitch").prop('checked', state);
+
+      // no override --> use and show temp_preset
+      $("#temp_osijek").html(data.temp_osijek);
+      $("#temp_preset").html(data.temp_preset);
+      $("#temp_living").html(data.temp_living);
+
+      lastRefreshed = new Date().toLocaleString();
+      $('#log').html('Posljednji puta osvježeno: ' + lastRefreshed);
+    },
+    error: function(jqXHR, textStatus, errorThrown) {
+      console.error(textStatus, errorThrown);
+      // console.error(jqXHR.statusText);
+      if (textStatus === "timeout") {
+        clearTimeout(dataRefreshTimeout);
+        $('#error_text').html('Pre dugo je vremena proteklo bez odgovora servera. Automatsko osvježavanje isključeno.');
+      } else {
+        $('#error_text').html('Za odabranu funkciju potrebno je odobrenje.');
+      }
+      $('#error').removeClass('hidden').addClass('in');
+    }
+  });
+};
 
 var getOverrideSwitchBinaryState = function() {
   return isOverrideSwitchOn() ? 1 : 0;
@@ -238,6 +272,12 @@ var isHeatingSwitchOn = function() {
   return $("input#myonoffswitch").is(":checked");
 }
 
+var getHolidaySwitchBinaryState = function() {
+  return isHolidaySwitchOn() ? 1 : 0;
+}
+var isHolidaySwitchOn = function() {
+  return $("input#holidayswitch").is(":checked");
+}
 
 $(document).ready(function() {
   $('.carousel').carousel({
@@ -274,6 +314,11 @@ $(document).ready(function() {
   $('#myonoffswitch').on("click", function(event) {
     event.preventDefault();
     switchHeating();
+  });
+
+  $('#holidayswitch').on("click", function(event) {
+    event.preventDefault();
+    switchHoliday();
   });
 
   $('#error_close').click(function() {

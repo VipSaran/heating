@@ -12,12 +12,22 @@ console.logCopy = console.log.bind(console);
 console.log = function() {
   // var currentTime = '[' + new Date().toISOString().slice(11, -5) + '] ';
   var currentTime = '[' + new Date().toString().split(" ")[4] + '] ';
+  for (var i = 0; i < arguments.length; i++) {
+    if (typeof arguments[i] === 'object') {
+      arguments[i] = JSON.stringify(arguments[i], null, 2);
+    }
+  }
   this.logCopy(currentTime.concat(Array.prototype.slice.call(arguments)));
 };
 console.errorCopy = console.error.bind(console);
 console.error = function() {
   // var currentTime = '[' + new Date().toISOString().slice(11, -5) + '] ';
   var currentTime = '[' + new Date().toString().split(" ")[4] + '] ';
+  for (var i = 0; i < arguments.length; i++) {
+    if (typeof arguments[i] === 'object') {
+      arguments[i] = JSON.stringify(arguments[i], null, 2);
+    }
+  }
   this.errorCopy(currentTime.concat(Array.prototype.slice.call(arguments)));
 };
 
@@ -38,7 +48,11 @@ app.configure(function() {
 
     initTimers();
     rrdb_tools.getLastTemps(function(data) {
-      last_temp_preset = data.temp_preset;
+      if (config.holidaySwitch) {
+        last_temp_preset = config.getTimeTableTemp();
+      } else {
+        last_temp_preset = data.temp_preset;
+      }
       last_temp_living = data.temp_living;
       last_temp_osijek = data.temp_osijek;
     });
@@ -87,7 +101,8 @@ app.get('/get_states', function(req, res) {
 
   var states = {
     "overrideSwitch": config.overrideSwitch,
-    "heatingSwitch": config.heatingSwitch
+    "heatingSwitch": config.heatingSwitch,
+    "holidaySwitch": config.holidaySwitch
   };
   res.send(states);
 });
@@ -115,6 +130,21 @@ app.get('/switch_heating/:value', auth, function(req, res) {
   config.heatingSwitch = ((req.params.value * 1) == 1);
 
   gpio_tools.switchHeating(config.heatingSwitch);
+
+  var temps = {
+    "temp_preset": last_temp_preset,
+    "temp_living": last_temp_living,
+    "temp_osijek": last_temp_osijek
+  };
+  res.send(temps);
+});
+
+app.get('/switch_holiday/:value', auth, function(req, res) {
+  console.log('/switch_holiday/:', req.params.value);
+
+  config.holidaySwitch = ((req.params.value * 1) == 1);
+
+  last_temp_preset = config.getTimeTableTemp();
 
   var temps = {
     "temp_preset": last_temp_preset,
