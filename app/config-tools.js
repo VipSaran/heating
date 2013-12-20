@@ -15,6 +15,7 @@ var delay_pump_off = 300000; // 300.000 = 5 min
 var timeTableData;
 var overrideSwitch;
 var heatingSwitch;
+var holidaySwitch;
 
 (function() {
   var days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -47,11 +48,13 @@ var readConfig = function(cb) {
       console.error('  error=', err);
       overrideSwitch = false;
       heatingSwitch = true;
+      holidaySwitch = false;
     } else {
       var data = JSON.parse(data_json);
       console.log('  config=', data);
       overrideSwitch = data.overrideSwitch;
       heatingSwitch = data.heatingSwitch;
+      holidaySwitch = data.holidaySwitch;
     }
 
     if (typeof(cb) == "function") {
@@ -65,7 +68,8 @@ var writeConfig = function(cb) {
 
   var config = {
     "overrideSwitch": overrideSwitch,
-    "heatingSwitch": heatingSwitch
+    "heatingSwitch": heatingSwitch,
+    "holidaySwitch": holidaySwitch
   };
 
   fs.writeFile(app_dir + '/' + config_file_name, JSON.stringify(config), function(err) {
@@ -96,6 +100,16 @@ Object.defineProperty(exports, "heatingSwitch", {
   },
   set: function(value) {
     heatingSwitch = value;
+    writeConfig();
+  }
+});
+
+Object.defineProperty(exports, "holidaySwitch", {
+  get: function() {
+    return holidaySwitch;
+  },
+  set: function(value) {
+    holidaySwitch = value;
     writeConfig();
   }
 });

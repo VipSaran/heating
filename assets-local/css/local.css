@@ -73,7 +73,7 @@ body {
 .temp_living {
   color: #D62728;
 }
-.overrideswitch {
+.overrideswitch, .holidayswitch {
   color: #666;
   font-weight: 800;
   font-size: 1em;

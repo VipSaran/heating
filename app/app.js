@@ -124,6 +124,21 @@ app.get('/switch_heating/:value', auth, function(req, res) {
   res.send(temps);
 });
 
+app.get('/switch_holiday/:value', auth, function(req, res) {
+  console.log('/switch_holiday/:', req.params.value);
+
+  config.holidaySwitch = ((req.params.value * 1) == 1);
+
+  last_temp_preset = config.getTimeTableTemp();
+
+  var temps = {
+    "temp_preset": last_temp_preset,
+    "temp_living": last_temp_living,
+    "temp_osijek": last_temp_osijek
+  };
+  res.send(temps);
+});
+
 app.get('/set_preset_temp/:value', auth, function(req, res) {
   console.log('/set_preset_temp/:', req.params.value);
 
