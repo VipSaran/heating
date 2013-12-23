@@ -137,6 +137,18 @@ var setHeaterState = function(value, cb) {
   });
 };
 
+var getPumpState = function(cb) {
+  console.log('gpio-tools.getPumpState()');
+
+  gpio.read(gpioPinPump, function(err, value) {
+    if (err) throw err;
+    console.log('  pumpState=', value);
+    if (typeof(cb) == "function") {
+      cb(value);
+    }
+  });
+};
+
 var setPumpState = function(value, cb) {
   console.log('gpio-tools.setPumpState()', value);
   gpio.write(gpioPinPump, value, function(err) {
@@ -174,6 +186,12 @@ var regulateHeating = function(turnOn) {
         setTimeout(function() {
           setHeaterState(1);
         }, 3000); // 3s
+      } else {
+        getPumpState(function(pumpState) {
+          if (!pumpState) {
+            setPumpState(1);
+          }
+        });
       }
     } else {
       if (heaterState) {
