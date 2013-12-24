@@ -184,7 +184,7 @@ var getTimeTableTemp = function(millis) {
       // console.log('  continuation of "night" from previous day');
       var yesterday = new Date(now.getTime() - (24 * 60 * 60 * 1000));
       // console.log('  yesterday=', yesterday);
-      if (yesterday.isWorkday()) {
+      if (!holidaySwitch && yesterday.isWorkday()) {
         presets = timeTableData.workday;
       } else {
         presets = timeTableData.weekend;
@@ -210,7 +210,7 @@ var getNextTimeTable = function(millis) {
   // console.log('  now=', now);
   var presets;
 
-  if (now.isWorkday()) {
+  if (!holidaySwitch && now.isWorkday()) {
     presets = timeTableData.workday;
   } else {
     presets = timeTableData.weekend;
@@ -243,7 +243,7 @@ var getNextTimeTable = function(millis) {
       console.log('  target is "morning" of next day');
       var tomorrow = new Date(now.getTime() + (24 * 60 * 60 * 1000));
       console.log('  tomorrow=', tomorrow);
-      if (tomorrow.isWorkday()) {
+      if (!holidaySwitch && tomorrow.isWorkday()) {
         presets = timeTableData.workday;
       } else {
         presets = timeTableData.weekend;
