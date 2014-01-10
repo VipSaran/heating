@@ -7,8 +7,8 @@ var gpioPinHeater = 11; // header pin 11 = BCM GPIO 17 = GPIO/wiringPi 0
 var gpioPinPump = 12; // header pin 12 = BCM GPIO 18 = GPIO/wiringPi 1
 
 var tempLivingSensorId = '28.AD6DD5040000'; // on 1-wire master
-var temp2SensorId = '28.FDA005050000'; // on 1-wire master
-var temp3SensorId = '28.1C0805050000'; // on 1-wire master
+var tempPlaySensorId = '28.1C0805050000'; // on 1-wire master
+var tempBasementSensorId = '28.FDA005050000'; // on 1-wire master
 
 function execute(command, callback) {
   exec(command, function(error, stdout, stderr) {
