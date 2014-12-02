@@ -96,6 +96,7 @@ var auth = function(req, res, next) {
   }
 }
 
+// routes
 app.get('/get_states', function(req, res) {
   console.log('/get_states');
 
@@ -104,7 +105,7 @@ app.get('/get_states', function(req, res) {
     "heatingSwitch": config.heatingSwitch,
     "holidaySwitch": config.holidaySwitch
   };
-  res.send(states);
+  res.json(states);
 });
 
 app.get('/switch_override/:value', auth, function(req, res) {
@@ -121,7 +122,7 @@ app.get('/switch_override/:value', auth, function(req, res) {
     "temp_living": last_temp_living,
     "temp_osijek": last_temp_osijek
   };
-  res.send(temps);
+  res.json(temps);
 });
 
 app.get('/switch_heating/:value', auth, function(req, res) {
@@ -136,7 +137,7 @@ app.get('/switch_heating/:value', auth, function(req, res) {
     "temp_living": last_temp_living,
     "temp_osijek": last_temp_osijek
   };
-  res.send(temps);
+  res.json(temps);
 });
 
 app.get('/switch_holiday/:value', auth, function(req, res) {
@@ -151,7 +152,7 @@ app.get('/switch_holiday/:value', auth, function(req, res) {
     "temp_living": last_temp_living,
     "temp_osijek": last_temp_osijek
   };
-  res.send(temps);
+  res.json(temps);
 });
 
 app.get('/set_preset_temp/:value', auth, function(req, res) {
@@ -174,7 +175,7 @@ app.get('/set_preset_temp/:value', auth, function(req, res) {
     "temp_living": last_temp_living,
     "temp_osijek": last_temp_osijek
   };
-  res.send(temps);
+  res.json(temps);
 
   // regulate_interval = 30s --> regulate now
   collectAndRegulateTemp();
@@ -188,7 +189,7 @@ app.get('/get_temps', function(req, res) {
     "temp_living": last_temp_living,
     "temp_osijek": last_temp_osijek
   };
-  res.send(temps);
+  res.json(temps);
 });
 
 app.get('/refresh_image', function(req, res) {

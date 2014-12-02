@@ -1,5 +1,5 @@
 $.ajaxSetup({
-  timeout: 15000
+  timeout: 20000
 });
 
 var lastRefreshed = new Date().toLocaleString(); // fresh temp readout or fresh graph
