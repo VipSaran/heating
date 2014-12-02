@@ -281,17 +281,17 @@ var shouldStartHeating = function(millis, temp_preset, temp_living, temp_osijek)
 
     if (target.temp > temp_living && target.temp > temp_preset) {
       // see how much we should heat
-      var tempDiffToReach = parseFloat(target.temp - temp_living).toFixed(2);
+      var tempDiffToReach = parseFloat((target.temp - temp_living).toFixed(2));
       console.log('  tempDiffToReach=', tempDiffToReach);
 
-      var delta = temp_living - temp_osijek;
+      var delta = parseFloat((target.temp - temp_osijek).toFixed(2));
       console.log('  delta=', delta);
 
       var Cph = 3 - (0.1 * delta);
       console.log('  Cph=', Cph);
 
       // see how long to reach that heat
-      var timeToReachTempDiff = parseFloat(tempDiffToReach / Cph).toFixed(2);
+      var timeToReachTempDiff = parseFloat((tempDiffToReach / Cph).toFixed(2));
       console.log('  timeToReachTempDiff=', timeToReachTempDiff, 'hours');
 
       var hourMillis = 60 * 60 * 1000;
