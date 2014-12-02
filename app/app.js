@@ -159,10 +159,14 @@ app.get('/set_preset_temp/:value', auth, function(req, res) {
 
   config.overrideSwitch = true;
 
-  if (req.params.value == 'dec') {
-    last_temp_preset--;
+  if (isNaN(req.params.value)) {
+    if (req.params.value == 'dec') {
+      last_temp_preset--;
+    } else {
+      last_temp_preset++;
+    }
   } else {
-    last_temp_preset++;
+    last_temp_preset = req.params.value;
   }
 
   var temps = {
