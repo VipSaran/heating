@@ -97,8 +97,8 @@ var auth = function(req, res, next) {
 }
 
 // routes
-app.get('/get_states', function(req, res) {
-  console.log('/get_states');
+app.get('/get_switches', function(req, res) {
+  console.log('/get_switches');
 
   var states = {
     "overrideSwitch": config.overrideSwitch,

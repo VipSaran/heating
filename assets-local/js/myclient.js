@@ -120,14 +120,14 @@ var setPresetTemp = function(value) {
   });
 };
 
-var updateStates = function() {
-  var url = document.URL + 'get_states';
+var updateSwitches = function() {
+  var url = document.URL + 'get_switches';
   console.log('URL=', url);
   $.ajax({
     url: url,
     dataType: "json",
     success: function(data, textStatus, jqXHR) {
-      console.log('/get_states API response received:', data);
+      console.log('/get_switches API response received:', data);
       $("input#overrideswitch").prop('checked', data.overrideSwitch);
       $("input#myonoffswitch").prop('checked', data.heatingSwitch);
       $("input#holidayswitch").prop('checked', data.holidaySwitch);
@@ -288,7 +288,7 @@ $(document).ready(function() {
     $(this).toggleClass('is-hover');
   });
 
-  updateStates();
+  updateSwitches();
 
   refreshData();
 
