@@ -1,4 +1,5 @@
 var express = require('express');
+var http = require('http');
 var config = require('./config-tools');
 var user_tools = require('./user-tools');
 var gpio_tools = require('./gpio-tools');
@@ -59,10 +60,10 @@ app.configure(function() {
   });
 });
 
-function isFromLAN(ip) {
+function isFromLAN(ip, cb) {
   console.log('isFromLAN()', ip);
   if (ip === '127.0.0.1') {
-    return true;
+    return cb(true);
   }
 
   try {
@@ -72,28 +73,48 @@ function isFromLAN(ip) {
     // var lastOctet = ip.substring(lastDot + 1);
     // console.log('lastOctet=', lastOctet);
     if (first3Octets === '192.168.2') {
-      return true;
+      return cb(true);
     }
   } catch (e) {
     console.error('error: ' + e);
-    return false;
   }
+
+  // allow access from external IP if it is the same as servers
+  // e.g. access via DynDNS is external, but if client and server IP are the same
+  // --> they share a WAN address --> they come from same LAN
+  http.get('http://curlmyip.com/', function(res) {
+    var extIP = '';
+    res.on('data', function(chunk) {
+      console.log('http.get, body: ' + chunk);
+      extIP += chunk;
+    });
+    res.on('end', function() {
+      extIP = extIP.trim();
+      console.log('http.get, ip (' + ip + ') === extIP (' + extIP + ') -->', ip === extIP);
+      return cb(ip === extIP);
+    });
+  }).on('error', function(e) {
+    console.log("http.get, error: " + e.message);
+    return cb(false);
+  });
 }
 
 var basicAuth = express.basicAuth;
 var auth = function(req, res, next) {
 
-  if (isFromLAN(req.ip)) {
-    // console.log('LAN --> no auth needed');
-    next();
-  } else {
-    // console.log(req.ip + ' --> WAN --> auth to pass');
-    basicAuth(function(user, pass, callback) {
-      user_tools.checkCredentials(user, pass, function(valid) {
-        callback(null, valid);
-      });
-    })(req, res, next);
-  }
+  isFromLAN(req.ip, function(fromLAN) {
+    if (fromLAN) {
+      // console.log('LAN --> no auth needed');
+      next();
+    } else {
+      // console.log(req.ip + ' --> WAN --> auth to pass');
+      basicAuth(function(user, pass, callback) {
+        user_tools.checkCredentials(user, pass, function(valid) {
+          callback(null, valid);
+        });
+      })(req, res, next);
+    }
+  });
 }
 
 // routes
