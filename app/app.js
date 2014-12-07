@@ -79,6 +79,8 @@ function isFromLAN(ip, cb) {
     console.error('error: ' + e);
   }
 
+  return cb(false);
+
   // allow access from external IP if it is the same as servers
   // e.g. access via DynDNS is external, but if client and server IP are the same
   // --> they share a WAN address --> they come from same LAN
@@ -117,16 +119,31 @@ var auth = function(req, res, next) {
   });
 }
 
-// routes
-app.get('/get_switches', function(req, res) {
-  console.log('/get_switches');
-
-  var states = {
+function getState() {
+  var state = {
+    "temp_preset": last_temp_preset,
+    "temp_living": last_temp_living,
+    "temp_osijek": last_temp_osijek,
     "overrideSwitch": config.overrideSwitch,
     "heatingSwitch": config.heatingSwitch,
     "holidaySwitch": config.holidaySwitch
   };
-  res.json(states);
+
+  return state;
+}
+
+// routes
+app.get('/get_state', function(req, res) {
+  console.log('/get_state');
+
+  res.json(getState());
+});
+
+// TODO remove and use /get_state
+app.get('/get_switches', function(req, res) {
+  console.log('/get_switches');
+
+  res.json(getState());
 });
 
 app.get('/switch_override/:value', auth, function(req, res) {
@@ -138,12 +155,7 @@ app.get('/switch_override/:value', auth, function(req, res) {
     last_temp_preset = config.getTimeTableTemp();
   }
 
-  var temps = {
-    "temp_preset": last_temp_preset,
-    "temp_living": last_temp_living,
-    "temp_osijek": last_temp_osijek
-  };
-  res.json(temps);
+  res.json(getState());
 });
 
 app.get('/switch_heating/:value', auth, function(req, res) {
@@ -153,12 +165,7 @@ app.get('/switch_heating/:value', auth, function(req, res) {
 
   gpio_tools.switchHeating(config.heatingSwitch);
 
-  var temps = {
-    "temp_preset": last_temp_preset,
-    "temp_living": last_temp_living,
-    "temp_osijek": last_temp_osijek
-  };
-  res.json(temps);
+  res.json(getState());
 });
 
 app.get('/switch_holiday/:value', auth, function(req, res) {
@@ -168,12 +175,7 @@ app.get('/switch_holiday/:value', auth, function(req, res) {
 
   last_temp_preset = config.getTimeTableTemp();
 
-  var temps = {
-    "temp_preset": last_temp_preset,
-    "temp_living": last_temp_living,
-    "temp_osijek": last_temp_osijek
-  };
-  res.json(temps);
+  res.json(getState());
 });
 
 app.get('/set_preset_temp/:value', auth, function(req, res) {
@@ -191,26 +193,17 @@ app.get('/set_preset_temp/:value', auth, function(req, res) {
     last_temp_preset = req.params.value;
   }
 
-  var temps = {
-    "temp_preset": last_temp_preset,
-    "temp_living": last_temp_living,
-    "temp_osijek": last_temp_osijek
-  };
-  res.json(temps);
+  res.json(getState());
 
   // regulate_interval = 30s --> regulate now
   collectAndRegulateTemp();
 });
 
+// TODO remove and use /get_state
 app.get('/get_temps', function(req, res) {
   console.log('/get_temps');
 
-  var temps = {
-    "temp_preset": last_temp_preset,
-    "temp_living": last_temp_living,
-    "temp_osijek": last_temp_osijek
-  };
-  res.json(temps);
+  res.json(getState());
 });
 
 app.get('/refresh_image', function(req, res) {
