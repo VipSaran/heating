@@ -139,13 +139,6 @@ app.get('/get_state', function(req, res) {
   res.json(getState());
 });
 
-// TODO remove and use /get_state
-app.get('/get_switches', function(req, res) {
-  console.log('/get_switches');
-
-  res.json(getState());
-});
-
 app.get('/switch_override/:value', auth, function(req, res) {
   console.log('/switch_override/:', req.params.value);
 
@@ -197,13 +190,6 @@ app.get('/set_preset_temp/:value', auth, function(req, res) {
 
   // regulate_interval = 30s --> regulate now
   collectAndRegulateTemp();
-});
-
-// TODO remove and use /get_state
-app.get('/get_temps', function(req, res) {
-  console.log('/get_temps');
-
-  res.json(getState());
 });
 
 app.get('/refresh_image', function(req, res) {
