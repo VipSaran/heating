@@ -126,7 +126,8 @@ function getState() {
     "temp_osijek": last_temp_osijek,
     "overrideSwitch": config.overrideSwitch,
     "heatingSwitch": config.heatingSwitch,
-    "holidaySwitch": config.holidaySwitch
+    "holidaySwitch": config.holidaySwitch,
+    "updated": new Date().getTime()
   };
 
   return state;
