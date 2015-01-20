@@ -1,0 +1,14 @@
+{
+  "name": "heating",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "bcrypt-nodejs": "0.0.3",
+    "body-parser": "~1.8.1",
+    "express": "~4.9.0",
+    "express-session": "^1.9.1",
+    "serve-favicon": "^2.1.6",
+    "forecast.io": "0.0.9",
+    "pi-gpio": "0.0.6"
+  }
+}
