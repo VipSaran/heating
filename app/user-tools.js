@@ -131,7 +131,11 @@ var createUser = function(name, pass, cb) {
             cb(false);
           }
         } else {
-          console.log("  user " + newUser.username + " successfully created and saved");
+          console.log("  user '" + newUser.username + "' successfully " + existing ? "updated" : "created");
+
+          // reset cached users
+          cached_users = [];
+
           if (typeof(cb) == "function") {
             cb(true);
           }
