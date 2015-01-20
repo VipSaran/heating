@@ -1,6 +1,6 @@
 node_modules/
-/assets-local/img/temperatures_graph.png
-/assets-local/img/temperatures_graph_hour.png
-/assets-local/img/temperatures_graph_month.png
-/assets-local/img/temperatures_graph_week.png
-/app/.auth
+public/img/temperatures_graph.png
+public/img/temperatures_graph_hour.png
+public/img/temperatures_graph_month.png
+public/img/temperatures_graph_week.png
+app/.auth

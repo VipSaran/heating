@@ -39,7 +39,7 @@ var last_temp_osijek = 0;
 
 app.configure(function() {
   app.use(express.favicon());
-  app.use(express['static'](__dirname + '/../'));
+  app.use(express['static'](__dirname + '/../public/'));
 
   config.init(function() {
 
@@ -198,6 +198,10 @@ app.get('/refresh_image', function(req, res) {
   rrdb_tools.paintTemps(function(updated) {
     res.send(updated);
   });
+});
+
+app.get('/', function(req, res) {
+  res.render('index.html');
 });
 
 // Express route for any other unrecognised incoming requests

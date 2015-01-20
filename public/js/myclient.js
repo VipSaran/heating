@@ -16,11 +16,11 @@ var getImage = function(cb) {
       console.log('/refresh_image API response received:', data);
       if (data) {
         $("#graph_day").html($("<img />", {
-          src: "assets-local/img/temperatures_graph.png",
+          src: "/img/temperatures_graph.png",
           title: "dnevni pogled"
         }));
         $("#graph_hour").html($("<img />", {
-          src: "assets-local/img/temperatures_graph_hour.png",
+          src: "/img/temperatures_graph_hour.png",
           title: "pogled kroz jedan sat"
         }));
         lastRefreshed = new Date().toLocaleString();

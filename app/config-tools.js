@@ -6,7 +6,7 @@ var rrd_temps_name = "heating.rrd";
 var rrd_state_name = "heating_state.rrd";
 var project_dir = "/home/pi/nodejs/heating";
 var app_dir = project_dir + "/app";
-var img_dir = project_dir + "/assets-local/img";
+var img_dir = project_dir + "/public/img";
 
 var regulate_interval = 30000; // 30.000 = 30 s
 var collect_record_interval = 120000; // 120.000 = 2 min
