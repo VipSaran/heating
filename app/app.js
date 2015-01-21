@@ -1,6 +1,7 @@
 var express = require('express');
 var favicon = require('serve-favicon');
 var http = require('http');
+var basicAuth = require('basic-auth');
 var config = require('./config-tools');
 var user_tools = require('./user-tools');
 var gpio_tools = require('./gpio-tools');
@@ -100,23 +101,35 @@ function isFromLAN(ip, cb) {
   });
 }
 
-var basicAuth = express.basicAuth;
 var auth = function(req, res, next) {
-
   isFromLAN(req.ip, function(fromLAN) {
     if (fromLAN) {
       // console.log('LAN --> no auth needed');
       next();
     } else {
       // console.log(req.ip + ' --> WAN --> auth to pass');
-      basicAuth(function(user, pass, callback) {
-        user_tools.checkCredentials(user, pass, function(valid) {
-          callback(null, valid);
-        });
-      })(req, res, next);
+
+      function unauthorized(res) {
+        res.set('WWW-Authenticate', 'Basic realm=Authorization Required');
+        return res.send(401);
+      };
+
+      var user = basicAuth(req);
+
+      if (!user || !user.name || !user.pass) {
+        return unauthorized(res);
+      };
+
+      user_tools.checkCredentials(user, pass, function(valid) {
+        if (valid) {
+          return next();
+        } else {
+          return unauthorized(res);
+        }
+      });
     }
   });
-}
+};
 
 function getState() {
   var state = {
@@ -205,13 +218,13 @@ app.get('/', function(req, res) {
 
 // Express route for any other unrecognised incoming requests
 app.get('*', function(req, res) {
-  res.send('Unrecognised API call', 404);
+  res.status(404).send('Unrecognised API call');
 });
 
 // Express route to handle errors
 app.use(function(err, req, res, next) {
   if (req.xhr) {
-    res.send(500, 'Oops, Something went wrong!');
+    res.status(500).send('Oops, Something went wrong!');
   } else {
     next(err);
   }
