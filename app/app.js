@@ -60,75 +60,57 @@ config.init(function() {
   });
 });
 
-function isFromLAN(ip, cb) {
-  console.log('isFromLAN()', ip);
-  if (ip === '127.0.0.1') {
-    return cb(true);
-  }
-
-  try {
-    var lastDot = ip.lastIndexOf('.');
-    var first3Octets = ip.substring(0, lastDot);
-    // console.log('first3Octets=', first3Octets);
-    // var lastOctet = ip.substring(lastDot + 1);
-    // console.log('lastOctet=', lastOctet);
-    if (first3Octets === '192.168.2') {
-      return cb(true);
-    }
-  } catch (e) {
-    console.error('error: ' + e);
-  }
-
-  return cb(false);
-
-  // allow access from external IP if it is the same as servers
-  // e.g. access via DynDNS is external, but if client and server IP are the same
-  // --> they share a WAN address --> they come from same LAN
-  http.get('http://curlmyip.com/', function(res) {
-    var extIP = '';
-    res.on('data', function(chunk) {
-      console.log('http.get, body: ' + chunk);
-      extIP += chunk;
-    });
-    res.on('end', function() {
-      extIP = extIP.trim();
-      console.log('http.get, ip (' + ip + ') === extIP (' + extIP + ') -->', ip === extIP);
-      return cb(ip === extIP);
-    });
-  }).on('error', function(e) {
-    console.log("http.get, error: " + e.message);
-    return cb(false);
-  });
-}
-
 var auth = function(req, res, next) {
-  isFromLAN(req.ip, function(fromLAN) {
-    if (fromLAN) {
-      // console.log('LAN --> no auth needed');
-      next();
-    } else {
-      // console.log(req.ip + ' --> WAN --> auth to pass');
-
-      function unauthorized(res) {
-        res.set('WWW-Authenticate', 'Basic realm=Authorization Required');
-        return res.send(401);
-      };
-
-      var user = basicAuth(req);
-
-      if (!user || !user.name || !user.pass) {
-        return unauthorized(res);
-      };
-
-      user_tools.checkCredentials(user, pass, function(valid) {
-        if (valid) {
-          return next();
-        } else {
-          return unauthorized(res);
-        }
-      });
+  function isFromLAN(ip) {
+    console.log('isFromLAN()', ip);
+    if (ip === '127.0.0.1') {
+      return true;
     }
-  });
+
+    try {
+      var lastDot = ip.lastIndexOf('.');
+      var first3Octets = ip.substring(0, lastDot);
+      // console.log('first3Octets=', first3Octets);
+      // var lastOctet = ip.substring(lastDot + 1);
+      // console.log('lastOctet=', lastOctet);
+      if (first3Octets === '192.168.2') {
+        return true;
+      }
+    } catch (e) {
+      console.error('error: ' + e);
+    }
+
+    return false;
+  }
+
+  if (isFromLAN(req.ip)) {
+    // console.log('LAN --> no auth needed');
+    next();
+  } else {
+    console.log(req.ip + ' --> WAN --> auth to pass');
+
+    function unauthorized(res) {
+      console.log('unauthorized --> 401');
+      res.set('WWW-Authenticate', 'Basic realm=Authorization Required');
+      return res.sendStatus(401);
+    }
+
+    var user = basicAuth(req);
+
+    if (!user || !user.name || !user.pass) {
+      console.log('!user');
+      return unauthorized(res);
+    };
+
+    user_tools.checkCredentials(user, pass, function(valid) {
+      console.log('valid:', valid);
+      if (valid) {
+        return next();
+      } else {
+        return unauthorized(res);
+      }
+    });
+  }
 };
 
 function getState() {
