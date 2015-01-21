@@ -1,4 +1,5 @@
 var express = require('express');
+var favicon = require('serve-favicon');
 var http = require('http');
 var config = require('./config-tools');
 var user_tools = require('./user-tools');
@@ -38,8 +39,8 @@ var last_temp_osijek = 0;
 
 
 app.configure(function() {
-  app.use(express.favicon());
-  app.use(express['static'](__dirname + '/../public/'));
+  app.use(express.static(__dirname + '/../public/'));
+  app.use(favicon(__dirname + '/../public/img/favicon.png'));
 
   config.init(function() {
 
