@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "author": "Robert Saric <robert.saric@gmail.com>",
   "scripts": {
-    "start": "node app/app.js",
+    "start": "node app/app.js"
   },
   "dependencies": {
     "async": "^0.9.0",
