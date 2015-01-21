@@ -38,26 +38,24 @@ var last_temp_living = 0;
 var last_temp_osijek = 0;
 
 
-app.configure(function() {
-  app.use(express.static(__dirname + '/../public/'));
-  app.use(favicon(__dirname + '/../public/img/favicon.png'));
+app.use(express.static(__dirname + '/../public/'));
+app.use(favicon(__dirname + '/../public/img/favicon.png'));
 
-  config.init(function() {
+config.init(function() {
 
-    gpio_tools.init();
+  gpio_tools.init();
 
-    rrdb_tools.init();
+  rrdb_tools.init();
 
-    initTimers();
-    rrdb_tools.getLastTemps(function(data) {
-      if (config.holidaySwitch) {
-        last_temp_preset = config.getTimeTableTemp();
-      } else {
-        last_temp_preset = data.temp_preset;
-      }
-      last_temp_living = data.temp_living;
-      last_temp_osijek = data.temp_osijek;
-    });
+  initTimers();
+  rrdb_tools.getLastTemps(function(data) {
+    if (config.holidaySwitch) {
+      last_temp_preset = config.getTimeTableTemp();
+    } else {
+      last_temp_preset = data.temp_preset;
+    }
+    last_temp_living = data.temp_living;
+    last_temp_osijek = data.temp_osijek;
   });
 });
 
