@@ -96,20 +96,33 @@ var auth = function(req, res, next) {
     }
 
     var user = basicAuth(req);
+    console.log('basicAuth user:', user);
 
     if (!user || !user.name || !user.pass) {
       console.log('!user');
       return unauthorized(res);
-    };
+    }
 
-    user_tools.checkCredentials(user, pass, function(valid) {
-      console.log('valid:', valid);
-      if (valid) {
-        return next();
-      } else {
-        return unauthorized(res);
-      }
+    var promise = new Promise(function(resolve, reject) {
+      user_tools.checkCredentials(user.name, user.pass, function(valid) {
+        console.log('valid:', valid);
+        if (valid) {
+          resolve("User authorised.");
+        } else {
+          reject(Error("User unauthorised."));
+        }
+      });
     });
+
+    promise.then(function(result) {
+      console.log(result);
+      return next();
+    }, function(err) {
+      console.log(err);
+      return unauthorized(res);
+    });
+
+    console.log('end auth');
   }
 };
 
