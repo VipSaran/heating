@@ -36,7 +36,7 @@ function addCachedUser(name, valid) {
 function getCachedUser(name) {
   console.log("user-tools.getCachedUser()", name);
   for (var i = cached_users.length - 1; i >= 0; i--) {
-    if (cached_users[i].getName() === name) {
+    if (cached_users[i].getName() === name && cached_users[i].isValid()) {
       return cached_users[i];
     }
   }
