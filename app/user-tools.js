@@ -8,7 +8,7 @@ var verifyPassword = function(users, name, pass, cb) {
   var valid = false;
 
   for (var i = users.length - 1; i >= 0; i--) {
-    console.log("  users[" + i + "].username=", users[i].username);
+    console.log("user-tools.verifyPassword(), users[" + i + "].username=", users[i].username);
     if (users[i].username === name) {
       valid = bcrypt.compareSync(pass, users[i].password);
 
@@ -26,6 +26,7 @@ var checkCredentials = function(name, pass, cb) {
   // console.log("user-tools.checkCredentials()", name, pass);
 
   if (cached_users.length > 0) {
+    console.log("user-tools.checkCredentials(), cached");
     verifyPassword(cached_users, name, pass, cb);
   } else {
     readAuth(function(users) {
@@ -35,6 +36,8 @@ var checkCredentials = function(name, pass, cb) {
 };
 
 var readAuth = function(cb) {
+  console.log("user-tools.readAuth()");
+
   fs.readFile(config.app_dir + '/.auth', 'utf8', function(err, data_json) {
     var users;
     if (err) {
