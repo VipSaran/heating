@@ -106,6 +106,7 @@ var auth = function(req, res, next) {
     // req.user = user;
 
     var obj = pause(req);
+    console.log('PAUSED');
     user_tools.checkCredentials(user.name, user.pass, function(valid) {
       console.log('valid:', valid);
       if (valid) {
@@ -114,6 +115,7 @@ var auth = function(req, res, next) {
         unauthorized(res);
       }
       obj.resume();
+      console.log('RESUMED');
     });
   }
 };

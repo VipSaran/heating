@@ -10,7 +10,9 @@ var verifyPassword = function(users, name, pass, cb) {
   for (var i = users.length - 1; i >= 0; i--) {
     console.log("user-tools.verifyPassword(), users[" + i + "].username=", users[i].username);
     if (users[i].username === name) {
+      console.log('bcrypt.compareSync() start');
       valid = bcrypt.compareSync(pass, users[i].password);
+      console.log('bcrypt.compareSync() end');
 
       // can only be one user with same username in the array
       break;
