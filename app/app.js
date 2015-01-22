@@ -2,6 +2,7 @@ var express = require('express');
 var favicon = require('serve-favicon');
 var http = require('http');
 var basicAuth = require('basic-auth');
+var pause = require('pause');
 var config = require('./config-tools');
 var user_tools = require('./user-tools');
 var gpio_tools = require('./gpio-tools');
@@ -102,15 +103,17 @@ var auth = function(req, res, next) {
       return unauthorized(res);
     }
 
-    req.user = user;
+    // req.user = user;
 
+    var obj = pause(req);
     user_tools.checkCredentials(user.name, user.pass, function(valid) {
       console.log('valid:', valid);
       if (valid) {
-        return next();
+        next();
       } else {
-        return unauthorized(res);
+        unauthorized(res);
       }
+      obj.resume();
     });
   }
 };
