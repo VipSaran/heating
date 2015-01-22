@@ -17,7 +17,7 @@ var verifyPassword = function(users, name, pass, cb) {
 
     if (user) {
       console.log('bcrypt.compare() start');
-      bcrypt.compare(pass, users[i].password, function(function(err, valid) {
+      bcrypt.compare(pass, users[i].password, function(err, valid) {
           console.log('bcrypt.compare() end');
           if (typeof(cb) == "function") {
             cb(valid);
