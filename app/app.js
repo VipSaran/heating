@@ -1,5 +1,7 @@
 var express = require('express');
+var favicon = require('serve-favicon');
 var http = require('http');
+var basicAuth = require('basic-auth');
 var config = require('./config-tools');
 var user_tools = require('./user-tools');
 var gpio_tools = require('./gpio-tools');
@@ -37,72 +39,49 @@ var last_temp_living = 0;
 var last_temp_osijek = 0;
 
 
-app.configure(function() {
-  app.use(express.favicon());
-  app.use(express['static'](__dirname + '/../public/'));
+app.use(express.static(__dirname + '/../public/'));
+app.use(favicon(__dirname + '/../public/img/favicon.png'));
 
-  config.init(function() {
+config.init(function() {
 
-    gpio_tools.init();
+  gpio_tools.init();
 
-    rrdb_tools.init();
+  rrdb_tools.init();
 
-    initTimers();
-    rrdb_tools.getLastTemps(function(data) {
-      if (config.holidaySwitch) {
-        last_temp_preset = config.getTimeTableTemp();
-      } else {
-        last_temp_preset = data.temp_preset;
-      }
-      last_temp_living = data.temp_living;
-      last_temp_osijek = data.temp_osijek;
-    });
+  initTimers();
+  rrdb_tools.getLastTemps(function(data) {
+    if (config.holidaySwitch) {
+      last_temp_preset = config.getTimeTableTemp();
+    } else {
+      last_temp_preset = data.temp_preset;
+    }
+    last_temp_living = data.temp_living;
+    last_temp_osijek = data.temp_osijek;
   });
 });
 
-function isFromLAN(ip, cb) {
-  console.log('isFromLAN()', ip);
-  if (ip === '127.0.0.1') {
-    return cb(true);
-  }
-
-  try {
-    var lastDot = ip.lastIndexOf('.');
-    var first3Octets = ip.substring(0, lastDot);
-    // console.log('first3Octets=', first3Octets);
-    // var lastOctet = ip.substring(lastDot + 1);
-    // console.log('lastOctet=', lastOctet);
-    if (first3Octets === '192.168.2') {
+var auth = function(req, res, next) {
+  function isFromLAN(ip, cb) {
+    console.log('isFromLAN()', ip);
+    if (ip === '127.0.0.1') {
       return cb(true);
     }
-  } catch (e) {
-    console.error('error: ' + e);
-  }
 
-  return cb(false);
+    try {
+      var lastDot = ip.lastIndexOf('.');
+      var first3Octets = ip.substring(0, lastDot);
+      // console.log('first3Octets=', first3Octets);
+      // var lastOctet = ip.substring(lastDot + 1);
+      // console.log('lastOctet=', lastOctet);
+      if (first3Octets === '192.168.2') {
+        return cb(true);
+      }
+    } catch (e) {
+      console.error('error: ' + e);
+    }
 
-  // allow access from external IP if it is the same as servers
-  // e.g. access via DynDNS is external, but if client and server IP are the same
-  // --> they share a WAN address --> they come from same LAN
-  http.get('http://curlmyip.com/', function(res) {
-    var extIP = '';
-    res.on('data', function(chunk) {
-      console.log('http.get, body: ' + chunk);
-      extIP += chunk;
-    });
-    res.on('end', function() {
-      extIP = extIP.trim();
-      console.log('http.get, ip (' + ip + ') === extIP (' + extIP + ') -->', ip === extIP);
-      return cb(ip === extIP);
-    });
-  }).on('error', function(e) {
-    console.log("http.get, error: " + e.message);
     return cb(false);
-  });
-}
-
-var basicAuth = express.basicAuth;
-var auth = function(req, res, next) {
+  }
 
   isFromLAN(req.ip, function(fromLAN) {
     if (fromLAN) {
@@ -110,14 +89,31 @@ var auth = function(req, res, next) {
       next();
     } else {
       // console.log(req.ip + ' --> WAN --> auth to pass');
-      basicAuth(function(user, pass, callback) {
-        user_tools.checkCredentials(user, pass, function(valid) {
-          callback(null, valid);
-        });
-      })(req, res, next);
+
+      function unauthorized(res) {
+        console.log('unauthorized --> 401');
+        res.set('WWW-Authenticate', 'Basic realm=Authorization Required');
+        return res.sendStatus(401);
+      }
+
+      var user = basicAuth(req);
+
+      if (!user || !user.name || !user.pass) {
+        console.log('!user');
+        return unauthorized(res);
+      }
+
+      user_tools.checkCredentials(user.name, user.pass, function(valid) {
+        console.log('valid:', valid);
+        if (valid) {
+          next();
+        } else {
+          unauthorized(res);
+        }
+      });
     }
   });
-}
+};
 
 function getState() {
   var state = {
@@ -206,13 +202,13 @@ app.get('/', function(req, res) {
 
 // Express route for any other unrecognised incoming requests
 app.get('*', function(req, res) {
-  res.send('Unrecognised API call', 404);
+  res.status(404).send('Unrecognised API call');
 });
 
 // Express route to handle errors
 app.use(function(err, req, res, next) {
   if (req.xhr) {
-    res.send(500, 'Oops, Something went wrong!');
+    res.status(500).send('Oops, Something went wrong!');
   } else {
     next(err);
   }

@@ -1,14 +1,19 @@
 {
   "name": "heating",
-  "version": "0.0.1",
-  "private": true,
+  "version": "0.1.0",
+  "author": "Robert Saric <robert.saric@gmail.com>",
+  "scripts": {
+    "start": "node app/app.js"
+  },
   "dependencies": {
+    "async": "^0.9.0",
+    "basic-auth": "^1.0.0",
     "bcrypt-nodejs": "0.0.3",
-    "body-parser": "~1.8.1",
-    "express": "~4.9.0",
-    "express-session": "^1.9.1",
-    "serve-favicon": "^2.1.6",
+    "express": "^4.11.1",
     "forecast.io": "0.0.9",
-    "pi-gpio": "0.0.6"
-  }
+    "pi-gpio": "0.0.6",
+    "serve-favicon": "^2.2.0"
+  },
+  "private": true,
+  "license": "Apache License 2.0"
 }
