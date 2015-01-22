@@ -61,10 +61,10 @@ config.init(function() {
 });
 
 var auth = function(req, res, next) {
-  function isFromLAN(ip) {
+  function isFromLAN(ip, cb) {
     console.log('isFromLAN()', ip);
     if (ip === '127.0.0.1') {
-      return true;
+      return cb(true);
     }
 
     try {
@@ -74,43 +74,45 @@ var auth = function(req, res, next) {
       // var lastOctet = ip.substring(lastDot + 1);
       // console.log('lastOctet=', lastOctet);
       if (first3Octets === '192.168.2') {
-        return true;
+        return cb(true);
       }
     } catch (e) {
       console.error('error: ' + e);
     }
 
-    return false;
+    return cb(false);
   }
 
-  if (isFromLAN(req.ip)) {
-    // console.log('LAN --> no auth needed');
-    next();
-  } else {
-    // console.log(req.ip + ' --> WAN --> auth to pass');
+  isFromLAN(req.ip, function(fromLAN) {
+    if (fromLAN) {
+      // console.log('LAN --> no auth needed');
+      next();
+    } else {
+      // console.log(req.ip + ' --> WAN --> auth to pass');
 
-    function unauthorized(res) {
-      console.log('unauthorized --> 401');
-      res.set('WWW-Authenticate', 'Basic realm=Authorization Required');
-      return res.sendStatus(401);
-    }
-
-    var user = basicAuth(req);
-
-    if (!user || !user.name || !user.pass) {
-      console.log('!user');
-      return unauthorized(res);
-    }
-
-    user_tools.checkCredentials(user.name, user.pass, function(valid) {
-      console.log('valid:', valid);
-      if (valid) {
-        next();
-      } else {
-        unauthorized(res);
+      function unauthorized(res) {
+        console.log('unauthorized --> 401');
+        res.set('WWW-Authenticate', 'Basic realm=Authorization Required');
+        return res.sendStatus(401);
       }
-    });
-  }
+
+      var user = basicAuth(req);
+
+      if (!user || !user.name || !user.pass) {
+        console.log('!user');
+        return unauthorized(res);
+      }
+
+      user_tools.checkCredentials(user.name, user.pass, function(valid) {
+        console.log('valid:', valid);
+        if (valid) {
+          next();
+        } else {
+          unauthorized(res);
+        }
+      });
+    }
+  });
 };
 
 function getState() {
