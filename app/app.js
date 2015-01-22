@@ -1,6 +1,7 @@
 var express = require('express');
 var favicon = require('serve-favicon');
 var http = require('http');
+var basicAuth = require('basic-auth');
 var config = require('./config-tools');
 var user_tools = require('./user-tools');
 var gpio_tools = require('./gpio-tools');
@@ -108,7 +109,16 @@ var auth = function(req, res, next) {
       next();
     } else {
       // console.log(req.ip + ' --> WAN --> auth to pass');
-      user_tools.basicAuth(user, pass);
+      var user = basicAuth(req);
+
+      user_tools.checkCredentials(user.name, user.pass, function(valid) {
+        if (!valid) {
+          res.set('WWW-Authenticate', 'Basic realm=Authorization Required');
+          return res.send(401);
+        }
+
+        next();
+      });
     }
   });
 }

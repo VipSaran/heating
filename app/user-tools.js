@@ -1,6 +1,5 @@
 var fs = require('fs');
 var bcrypt = require('bcrypt-nodejs');
-var basicAuth = require('basic-auth');
 var config = require('./config-tools');
 
 var cached_users = [];
@@ -145,31 +144,6 @@ var createUser = function(name, pass, cb) {
     });
   });
 }
-
-/**
- * Simple basic auth middleware for use with Express 4.x.
- *
- * @example
- * app.use('/api-requiring-auth', utils.basicAuth('username', 'password'));
- *
- * @param   {string}   username Expected username
- * @param   {string}   password Expected password
- * @returns {function} Express 4 middleware requiring the given credentials
- */
-exports.basicAuth = function(username, password) {
-  return function(req, res, next) {
-    var user = basicAuth(req);
-
-    checkCredentials(user, pass, function(valid) {
-      if (!valid) {
-        res.set('WWW-Authenticate', 'Basic realm=Authorization Required');
-        return res.send(401);
-      }
-
-      next();
-    });
-  };
-};
 
 exports.checkCredentials = checkCredentials;
 exports.createUser = createUser;
