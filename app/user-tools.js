@@ -4,7 +4,7 @@ var config = require('./config-tools');
 
 var cached_users = [];
 
-var verifyPassword = function(users, cb) {
+var verifyPassword = function(users, name, pass, cb) {
   var valid = false;
 
   for (var i = users.length - 1; i >= 0; i--) {
@@ -26,10 +26,10 @@ var checkCredentials = function(name, pass, cb) {
   // console.log("user-tools.checkCredentials()", name, pass);
 
   if (cached_users.length > 0) {
-    verifyPassword(cached_users, cb);
+    verifyPassword(cached_users, name, pass, cb);
   } else {
     readAuth(function(users) {
-      verifyPassword(users, cb);
+      verifyPassword(users, name, pass, cb);
     });
   }
 };
