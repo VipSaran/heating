@@ -2,7 +2,6 @@ var express = require('express');
 var favicon = require('serve-favicon');
 var http = require('http');
 var basicAuth = require('basic-auth');
-var pause = require('pause');
 var config = require('./config-tools');
 var user_tools = require('./user-tools');
 var gpio_tools = require('./gpio-tools');
@@ -88,7 +87,7 @@ var auth = function(req, res, next) {
     // console.log('LAN --> no auth needed');
     next();
   } else {
-    console.log(req.ip + ' --> WAN --> auth to pass');
+    // console.log(req.ip + ' --> WAN --> auth to pass');
 
     function unauthorized(res) {
       console.log('unauthorized --> 401');
@@ -103,10 +102,6 @@ var auth = function(req, res, next) {
       return unauthorized(res);
     }
 
-    // req.user = user;
-
-    var obj = pause(req);
-    console.log('PAUSED');
     user_tools.checkCredentials(user.name, user.pass, function(valid) {
       console.log('valid:', valid);
       if (valid) {
@@ -114,8 +109,6 @@ var auth = function(req, res, next) {
       } else {
         unauthorized(res);
       }
-      obj.resume();
-      console.log('RESUMED');
     });
   }
 };
