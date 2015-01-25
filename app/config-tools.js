@@ -1,12 +1,15 @@
 var fs = require('fs');
+var path = require('path');
 
 var config_file_name = 'config.json';
 var timetable_file_name = 'timetable.json';
 var rrd_temps_name = "heating.rrd";
 var rrd_state_name = "heating_state.rrd";
-var project_dir = "/home/pi/nodejs/heating";
-var app_dir = project_dir + "/app";
-var img_dir = project_dir + "/public/img";
+
+var root_dir = path.normalize(__dirname + '/..');
+var app_dir = root_dir + '/app';
+var public_dir = root_dir + "/public";
+var img_dir = public_dir + "/img";
 
 var regulate_interval = 30000; // 30.000 = 30 s
 var collect_record_interval = 120000; // 120.000 = 2 min
@@ -324,10 +327,12 @@ var shouldStartHeating = function(millis, temp_preset, temp_living, temp_osijek)
   return should;
 };
 
+exports.root_dir = root_dir; // read-only var
 exports.app_dir = app_dir; // read-only var
+exports.public_dir = public_dir; // read-only var
+exports.img_dir = img_dir; // read-only var
 exports.rrd_temps_name = rrd_temps_name; // read-only var
 exports.rrd_state_name = rrd_state_name; // read-only var
-exports.img_dir = img_dir; // read-only var
 exports.regulate_interval = regulate_interval; // read-only var
 exports.collect_record_interval = collect_record_interval; // read-only var
 exports.delay_pump_off = delay_pump_off; // read-only var

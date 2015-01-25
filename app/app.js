@@ -39,8 +39,8 @@ var last_temp_living = 0;
 var last_temp_osijek = 0;
 
 
-app.use(express.static(__dirname + '/../public/'));
-app.use(favicon(__dirname + '/../public/img/favicon.png'));
+app.use(express.static(config.public_dir));
+app.use(favicon(config.img_dir + '/favicon.png'));
 
 config.init(function() {
 
