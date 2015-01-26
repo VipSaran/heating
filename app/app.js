@@ -2,6 +2,7 @@ var express = require('express');
 var favicon = require('serve-favicon');
 var http = require('http');
 var basicAuth = require('basic-auth');
+var ifaces = require('os').networkInterfaces();
 var config = require('./config-tools');
 var user_tools = require('./user-tools');
 var gpio_tools = require('./gpio-tools');
