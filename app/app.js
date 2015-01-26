@@ -67,21 +67,35 @@ var auth = function(req, res, next) {
     }
 
     console.log('isFromLAN()', ip);
-    if (ip === '127.0.0.1') {
-      return cb(true);
-    }
-
     try {
       var lastDot = ip.lastIndexOf('.');
       var first3Octets = ip.substring(0, lastDot);
       // console.log('first3Octets=', first3Octets);
-      // var lastOctet = ip.substring(lastDot + 1);
-      // console.log('lastOctet=', lastOctet);
-      if (first3Octets === '192.168.2') {
-        return cb(true);
-      }
     } catch (e) {
       console.error('error: ' + e);
+    }
+
+    var ifkeys = Object.keys(ifaces);
+    for (ifkeysidx in ifkeys) {
+      var ifname = ifkeys[ifkeysidx];
+      for (ifacesidx in ifaces[ifname]) {
+        var iface = ifaces[ifname][ifacesidx];
+        if ('IPv4' !== iface.family) {
+          continue;
+        }
+
+        if (iface.internal === true && iface.address === ip) {
+          // console.log('internal');
+          return cb(true);
+        }
+
+        ifFirst3Oct = iface.address.substring(0, iface.address.lastIndexOf('.'));
+        // console.log('ifFirst3Oct:', ifFirst3Oct);
+        if (ifFirst3Oct === first3Octets) {
+          // console.log('ifFirst3Oct === first3Octets');
+          return cb(true);
+        }
+      }
     }
 
     return cb(false);
