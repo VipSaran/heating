@@ -13,6 +13,8 @@ var img_dir = public_dir + "/img";
 
 var scrobble_data_online = false;
 
+var allow_unauthenticated_lan = true;
+
 var regulate_interval = 30000; // 30.000 = 30 s
 var collect_record_interval = 120000; // 120.000 = 2 min
 var delay_pump_off = 300000; // 300.000 = 5 min
@@ -334,6 +336,7 @@ exports.app_dir = app_dir; // read-only var
 exports.public_dir = public_dir; // read-only var
 exports.img_dir = img_dir; // read-only var
 exports.scrobble_data_online = scrobble_data_online; // read-only var
+exports.allow_unauthenticated_lan = allow_unauthenticated_lan; // read-only var
 exports.rrd_temps_name = rrd_temps_name; // read-only var
 exports.rrd_state_name = rrd_state_name; // read-only var
 exports.regulate_interval = regulate_interval; // read-only var

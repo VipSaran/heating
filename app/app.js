@@ -62,6 +62,10 @@ config.init(function() {
 
 var auth = function(req, res, next) {
   function isFromLAN(ip, cb) {
+    if (!config.allow_unauthenticated_lan) {
+      return cb(false);
+    }
+
     console.log('isFromLAN()', ip);
     if (ip === '127.0.0.1') {
       return cb(true);
