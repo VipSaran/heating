@@ -1,4 +1,5 @@
 app/.auth
+log/*
 node_modules/
 public/img/temperatures_graph.png
 public/img/temperatures_graph_hour.png
