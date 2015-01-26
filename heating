@@ -1,8 +1,19 @@
+### BEGIN INIT INFO
+# Provides: heating
+# Required-Start: $remote_fs $syslog
+# Required-Stop: $remote_fs $syslog
+# Default-Start: 2 3 4 5
+# Default-Stop: 0 1 6
+# Short-Description: Heating
+# Description: Automation script for Node.js HVAC application
+### END INIT INFO
+
 #!/bin/bash
 
 FOREVER=/usr/local/bin/forever
-LOG_OPTIONS="--append -o /home/pi/logs/heating.log -e /home/pi/logs/heating.err"
-SERVER_JS_FILE=/home/pi/nodejs/heating/app/app.js
+APP_HOME=/home/pi/nodejs/heating
+LOG_OPTIONS="--append -o $APP_HOME/log/heating.log -e $APP_HOME/log/heating.err"
+SERVER_JS_FILE=$APP_HOME/app/app.js
 USER=pi
 
 case "$1" in
