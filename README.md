@@ -77,7 +77,7 @@ Automatic
   2. deploy the script with:
 
         sudo cp heating /etc/init.d/
-        sudo chmod 655 /etc/init.d/heating
+        sudo chmod 755 /etc/init.d/heating
         sudo update-rc.d heating defaults
 
   3. after that, start the service with: `sudo /etc/init.d/heating start`.
