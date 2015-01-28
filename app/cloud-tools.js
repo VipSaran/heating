@@ -1,8 +1,14 @@
 var request = require('request');
+var config = require('./config-tools');
 
 var sense_url = 'http://api.sen.se/events/?sense_key=6AfdW7DuFCNFzoUEXWYWvQ';
 
 var publishDataOnline = function(last_temp_preset, last_temp_living, last_temp_osijek) {
+  if (!config.scrobble_data_online) {
+    // console.log('cloud_tools.publishDataOnline(), skipped!');
+    return;
+  }
+
   console.log('cloud_tools.publishDataOnline()', last_temp_preset, last_temp_living, last_temp_osijek);
 
   try {

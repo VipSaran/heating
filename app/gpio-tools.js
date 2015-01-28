@@ -6,7 +6,11 @@ var config = require('./config-tools');
 var gpioPinHeater = 11; // header pin 11 = BCM GPIO 17 = GPIO/wiringPi 0
 var gpioPinPump = 12; // header pin 12 = BCM GPIO 18 = GPIO/wiringPi 1
 
-var tempLivingSensorId = '28-000004d56dad';
+var tempLivingSensorId = '28-000004d56dad'; // on 1-wire bus
+var tempPlaySensorId = '28-00000505081c'; // on 1-wire bus
+// var tempLivingSensorId = '28.AD6DD5040000'; // on 1-wire master
+// var tempPlaySensorId = '28.1C0805050000'; // on 1-wire master
+// var tempBasementSensorId = '28.FDA005050000'; // on 1-wire master
 
 function execute(command, callback) {
   exec(command, function(error, stdout, stderr) {
@@ -21,32 +25,38 @@ function execute(command, callback) {
 var init = function() {
   console.log('gpio-tools.init()');
 
+  // init 1-wire master
+  // var init_owserver = "/opt/owfs/bin/owserver --i2c=/dev/i2c-1:ALL"
+  // execute(init_owserver, function(out, err) {
+  //   if (err) {
+  //     console.error(err);
+  //   }
+  // });
+
+  gpio.close(gpioPinHeater, function(err) {
+    if (err) {
+      console.error('  ERROR', err);
+    } else {
+      console.log('  Closed pin', gpioPinHeater);
+    }
+  });
+
+  gpio.close(gpioPinPump, function(err) {
+    if (err) {
+      console.error('  ERROR', err);
+    } else {
+      console.log('  Closed pin', gpioPinPump);
+    }
+  });
+
   async.series([
 
-    // function(callback) {
-    //   gpio.close(gpioPinHeater, function(err) {
-    //     if (err) {
-    //       console.error('  ERROR', err);
-    //     } else {
-    //       console.log('  Closed pin', gpioPinHeater);
-    //     }
-    //   });
-    // },
     function(callback) {
 
       gpio.open(gpioPinHeater, "out", function(err) {
         callback(err, gpioPinHeater);
       });
     },
-    // function(callback) {
-    //   gpio.close(gpioPinPump, function(err) {
-    //     if (err) {
-    //       console.error('  ERROR', err);
-    //     } else {
-    //       console.log('  Closed pin', gpioPinPump);
-    //     }
-    //   });
-    // },
     function(callback) {
 
       gpio.open(gpioPinPump, "out", function(err) {
@@ -64,8 +74,10 @@ var init = function() {
 
 var getTempLiving = function(last_temp_living, cb) {
   console.log('gpio-tools.getTempLiving()', last_temp_living);
-  // var readStr = "cat /sys/bus/w1/devices/" + tempLivingSensorId + "/w1_slave | grep t= | cut -f2 -d= | awk '{print $1/1000}'";
   var readStr = "cat /sys/bus/w1/devices/" + tempLivingSensorId + "/w1_slave";
+  // var readStr = "/opt/owfs/bin/owread " + tempLivingSensorId + "/temperature";
+
+  var bus = true; // else master
 
   var tempLiving;
   execute(readStr, function(out, err) {
@@ -74,34 +86,53 @@ var getTempLiving = function(last_temp_living, cb) {
       tempLiving = last_temp_living;
     } else {
       try {
-        var lines = out.replace(/\r\n/g, "\n").split("\n");
-        // console.log(lines);
+        if (bus) {
+          var lines = out.replace(/\r\n/g, "\n").split("\n");
+          // console.log(lines);
 
-        if (lines == null || lines.length != 3) {
-          console.error('  ERROR: Wrong sensor readout format.');
-          tempLiving = last_temp_living;
-        } else {
-          var crc_OK = lines[0].substring(lines[0].length - 3) == "YES";
-          // console.log('  crc=', crc_OK);
+          if (lines == null || lines.length != 3) {
+            console.error('  ERROR: Wrong sensor readout format.');
+            tempLiving = last_temp_living;
+          } else {
+            var crc_OK = lines[0].substring(lines[0].length - 3) == "YES";
+            // console.log('  crc=', crc_OK);
 
-          if (crc_OK) {
-            var temp = lines[1].substring(lines[1].indexOf('t=') + 2);
-            // console.log('  temp=', temp);
+            if (crc_OK) {
+              var temp = lines[1].substring(lines[1].indexOf('t=') + 2);
+              // console.log('  temp=', temp);
 
-            if (!isNaN(temp)) {
-              tempLiving = parseFloat(temp / 1000).toFixed(1);
-              console.log('  tempLiving=', tempLiving);
+              if (!isNaN(temp)) {
+                tempLiving = parseFloat(temp / 1000).toFixed(1);
+                console.log('  tempLiving=', tempLiving);
 
-              if (tempLiving < 1 || tempLiving > 30) {
-                console.error('  ERROR: Value outside of reasonable range.');
+                if (tempLiving < 1 || tempLiving > 30) {
+                  console.error('  ERROR: Value outside of reasonable range.');
+                  tempLiving = last_temp_living;
+                }
+              } else {
+                console.error('  ERROR: Temperature value not a number.');
                 tempLiving = last_temp_living;
               }
             } else {
-              console.error('  ERROR: Temperature value not a number.');
+              console.error('  ERROR: Sensor readout CRC failed.');
+              tempLiving = last_temp_living;
+            }
+          }
+        } else {
+          // console.log('  out=', out);
+          var temp = out.replace(/^\s+|\s+$/g, '');
+          // console.log('  temp=', temp);
+
+          if (!isNaN(temp)) {
+            tempLiving = parseFloat(temp).toFixed(1);
+            console.log('  tempLiving=', tempLiving);
+
+            if (tempLiving < 1 || tempLiving > 30) {
+              console.error('  ERROR: Value outside of reasonable range.');
               tempLiving = last_temp_living;
             }
           } else {
-            console.error('  ERROR: Sensor readout CRC failed.');
+            console.error('  ERROR: Temperature value not a number.');
             tempLiving = last_temp_living;
           }
         }
@@ -144,6 +175,18 @@ var setHeaterState = function(value, cb) {
   });
 };
 
+var getPumpState = function(cb) {
+  console.log('gpio-tools.getPumpState()');
+
+  gpio.read(gpioPinPump, function(err, value) {
+    if (err) throw err;
+    console.log('  pumpState=', value);
+    if (typeof(cb) == "function") {
+      cb(value);
+    }
+  });
+};
+
 var setPumpState = function(value, cb) {
   console.log('gpio-tools.setPumpState()', value);
   gpio.write(gpioPinPump, value, function(err) {
@@ -181,6 +224,12 @@ var regulateHeating = function(turnOn) {
         setTimeout(function() {
           setHeaterState(1);
         }, 3000); // 3s
+      } else {
+        getPumpState(function(pumpState) {
+          if (!pumpState) {
+            setPumpState(1);
+          }
+        });
       }
     } else {
       if (heaterState) {

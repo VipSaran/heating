@@ -146,7 +146,8 @@ var insertTemps = function(ts, temp_preset, temp_living, temp_osijek) {
     ts + ":" + temp_preset + ":" + temp_living + ":" + temp_osijek;
 
   execute(updateStr, function(out, err) {
-    if (err) throw err;
+    if (err)
+      console.error("  " + config.rrd_temps_name + " update error:", err);
   });
 };
 
@@ -157,7 +158,8 @@ var insertState = function(ts, heater_state) {
     ts + ":" + heater_state;
 
   execute(updateStr, function(out, err) {
-    if (err) throw err;
+    if (err)
+      console.error("  " + config.rrd_state_name + " update error:", err);
   });
 };
 
@@ -212,26 +214,10 @@ var paintTemps = function(cb) {
     // only update if actually painted
     lastPaintedMillis = currTimeMillis;
 
-    execute(graphStrWeek + graphStrDefaults, function(out, err) {
-      if (err) {
-        console.error(err);
-      } else {
-        console.log("  painted WEEK");
+    paintTempsAndState(function() {
+      if (typeof(cb) == "function") {
+        cb(!err); // updated
       }
-
-      execute(graphStrMonth + graphStrDefaults, function(out, err) {
-        if (err) {
-          console.error(err);
-        } else {
-          console.log("  painted MONTH");
-        }
-
-        paintTempsAndState(function() {
-          if (typeof(cb) == "function") {
-            cb(!err); // updated
-          }
-        });
-      });
     });
   });
 };

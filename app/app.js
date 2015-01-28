@@ -1,4 +1,8 @@
 var express = require('express');
+var favicon = require('serve-favicon');
+var http = require('http');
+var basicAuth = require('basic-auth');
+var ifaces = require('os').networkInterfaces();
 var config = require('./config-tools');
 var user_tools = require('./user-tools');
 var gpio_tools = require('./gpio-tools');
@@ -12,12 +16,22 @@ console.logCopy = console.log.bind(console);
 console.log = function() {
   // var currentTime = '[' + new Date().toISOString().slice(11, -5) + '] ';
   var currentTime = '[' + new Date().toString().split(" ")[4] + '] ';
+  for (var i = 0; i < arguments.length; i++) {
+    if (typeof arguments[i] === 'object') {
+      arguments[i] = JSON.stringify(arguments[i], null, 2);
+    }
+  }
   this.logCopy(currentTime.concat(Array.prototype.slice.call(arguments)));
 };
 console.errorCopy = console.error.bind(console);
 console.error = function() {
   // var currentTime = '[' + new Date().toISOString().slice(11, -5) + '] ';
   var currentTime = '[' + new Date().toString().split(" ")[4] + '] ';
+  for (var i = 0; i < arguments.length; i++) {
+    if (typeof arguments[i] === 'object') {
+      arguments[i] = JSON.stringify(arguments[i], null, 2);
+    }
+  }
   this.errorCopy(currentTime.concat(Array.prototype.slice.call(arguments)));
 };
 
@@ -26,70 +40,119 @@ var last_temp_living = 0;
 var last_temp_osijek = 0;
 
 
-app.configure(function() {
-  app.use(express.favicon());
-  app.use(express['static'](__dirname + '/../'));
+app.use(express.static(config.public_dir));
+app.use(favicon(config.img_dir + '/favicon.png'));
 
-  config.init(function() {
+config.init(function() {
 
-    gpio_tools.init();
+  gpio_tools.init();
 
-    rrdb_tools.init();
+  rrdb_tools.init();
 
-    initTimers();
-    rrdb_tools.getLastTemps(function(data) {
+  initTimers();
+  rrdb_tools.getLastTemps(function(data) {
+    if (config.holidaySwitch) {
+      last_temp_preset = config.getTimeTableTemp();
+    } else {
       last_temp_preset = data.temp_preset;
-      last_temp_living = data.temp_living;
-      last_temp_osijek = data.temp_osijek;
-    });
+    }
+    last_temp_living = data.temp_living;
+    last_temp_osijek = data.temp_osijek;
   });
 });
 
-function isFromLAN(ip) {
-  console.log('isFromLAN()', ip);
-  if (ip === '127.0.0.1') {
-    return true;
-  }
-
-  try {
-    var lastDot = ip.lastIndexOf('.');
-    var first3Octets = ip.substring(0, lastDot);
-    // console.log('first3Octets=', first3Octets);
-    // var lastOctet = ip.substring(lastDot + 1);
-    // console.log('lastOctet=', lastOctet);
-    if (first3Octets === '192.168.2') {
-      return true;
-    }
-  } catch (e) {
-    console.error('error: ' + e);
-    return false;
-  }
-}
-
-var basicAuth = express.basicAuth;
 var auth = function(req, res, next) {
+  function isFromLAN(ip, cb) {
+    if (!config.allow_unauthenticated_lan) {
+      return cb(false);
+    }
 
-  if (isFromLAN(req.ip)) {
-    // console.log('LAN --> no auth needed');
-    next();
-  } else {
-    // console.log(req.ip + ' --> WAN --> auth to pass');
-    basicAuth(function(user, pass, callback) {
-      user_tools.checkCredentials(user, pass, function(valid) {
-        callback(null, valid);
-      });
-    })(req, res, next);
+    console.log('isFromLAN()', ip);
+    try {
+      var lastDot = ip.lastIndexOf('.');
+      var first3Octets = ip.substring(0, lastDot);
+      // console.log('first3Octets=', first3Octets);
+    } catch (e) {
+      console.error('error: ' + e);
+    }
+
+    var ifkeys = Object.keys(ifaces);
+    for (ifkeysidx in ifkeys) {
+      var ifname = ifkeys[ifkeysidx];
+      for (ifacesidx in ifaces[ifname]) {
+        var iface = ifaces[ifname][ifacesidx];
+        if ('IPv4' !== iface.family) {
+          continue;
+        }
+
+        if (iface.internal === true && iface.address === ip) {
+          // console.log('internal');
+          return cb(true);
+        }
+
+        ifFirst3Oct = iface.address.substring(0, iface.address.lastIndexOf('.'));
+        // console.log('ifFirst3Oct:', ifFirst3Oct);
+        if (ifFirst3Oct === first3Octets) {
+          // console.log('ifFirst3Oct === first3Octets');
+          return cb(true);
+        }
+      }
+    }
+
+    return cb(false);
   }
+
+  isFromLAN(req.ip, function(fromLAN) {
+    if (fromLAN) {
+      // console.log('LAN --> no auth needed');
+      next();
+    } else {
+      // console.log(req.ip + ' --> WAN --> auth to pass');
+
+      function unauthorized(res) {
+        console.log('unauthorized --> 401');
+        res.set('WWW-Authenticate', 'Basic realm=Authorization Required');
+        return res.sendStatus(401);
+      }
+
+      var user = basicAuth(req);
+
+      if (!user || !user.name || !user.pass) {
+        console.log('!user');
+        return unauthorized(res);
+      }
+
+      user_tools.checkCredentials(user.name, user.pass, function(valid) {
+        console.log('valid:', valid);
+        if (valid) {
+          next();
+        } else {
+          unauthorized(res);
+        }
+      });
+    }
+  });
+};
+
+function getState() {
+  var state = {
+    "temp_preset": last_temp_preset,
+    "temp_living": last_temp_living,
+    "temp_osijek": last_temp_osijek,
+    "overrideSwitch": config.overrideSwitch,
+    "heatingSwitch": config.heatingSwitch,
+    "holidaySwitch": config.holidaySwitch,
+    "updated": new Date().getTime()
+  };
+
+  return state;
 }
 
-app.get('/get_states', function(req, res) {
-  console.log('/get_states');
+// routes
+app.get('/get_state', function(req, res) {
+  console.log('/get_state');
 
-  var states = {
-    "overrideSwitch": config.overrideSwitch,
-    "heatingSwitch": config.heatingSwitch
-  };
-  res.send(states);
+  res.json(getState());
 });
 
 app.get('/switch_override/:value', auth, function(req, res) {
@@ -101,12 +164,7 @@ app.get('/switch_override/:value', auth, function(req, res) {
     last_temp_preset = config.getTimeTableTemp();
   }
 
-  var temps = {
-    "temp_preset": last_temp_preset,
-    "temp_living": last_temp_living,
-    "temp_osijek": last_temp_osijek
-  };
-  res.send(temps);
+  res.json(getState());
 });
 
 app.get('/switch_heating/:value', auth, function(req, res) {
@@ -116,12 +174,17 @@ app.get('/switch_heating/:value', auth, function(req, res) {
 
   gpio_tools.switchHeating(config.heatingSwitch);
 
-  var temps = {
-    "temp_preset": last_temp_preset,
-    "temp_living": last_temp_living,
-    "temp_osijek": last_temp_osijek
-  };
-  res.send(temps);
+  res.json(getState());
+});
+
+app.get('/switch_holiday/:value', auth, function(req, res) {
+  console.log('/switch_holiday/:', req.params.value);
+
+  config.holidaySwitch = ((req.params.value * 1) == 1);
+
+  last_temp_preset = config.getTimeTableTemp();
+
+  res.json(getState());
 });
 
 app.get('/set_preset_temp/:value', auth, function(req, res) {
@@ -129,29 +192,20 @@ app.get('/set_preset_temp/:value', auth, function(req, res) {
 
   config.overrideSwitch = true;
 
-  if (req.params.value == 'dec') {
-    last_temp_preset--;
+  if (isNaN(req.params.value)) {
+    if (req.params.value == 'dec') {
+      last_temp_preset--;
+    } else {
+      last_temp_preset++;
+    }
   } else {
-    last_temp_preset++;
+    last_temp_preset = req.params.value;
   }
 
-  var temps = {
-    "temp_preset": last_temp_preset,
-    "temp_living": last_temp_living,
-    "temp_osijek": last_temp_osijek
-  };
-  res.send(temps);
-});
+  res.json(getState());
 
-app.get('/get_temps', function(req, res) {
-  console.log('/get_temps');
-
-  var temps = {
-    "temp_preset": last_temp_preset,
-    "temp_living": last_temp_living,
-    "temp_osijek": last_temp_osijek
-  };
-  res.send(temps);
+  // regulate_interval = 30s --> regulate now
+  collectAndRegulateTemp();
 });
 
 app.get('/refresh_image', function(req, res) {
@@ -161,15 +215,19 @@ app.get('/refresh_image', function(req, res) {
   });
 });
 
+app.get('/', function(req, res) {
+  res.render('index.html');
+});
+
 // Express route for any other unrecognised incoming requests
 app.get('*', function(req, res) {
-  res.send('Unrecognised API call', 404);
+  res.status(404).send('Unrecognised API call');
 });
 
 // Express route to handle errors
 app.use(function(err, req, res, next) {
   if (req.xhr) {
-    res.send(500, 'Oops, Something went wrong!');
+    res.status(500).send('Oops, Something went wrong!');
   } else {
     next(err);
   }
@@ -218,8 +276,9 @@ function collectAndRegulateTemp() {
     }
 
     // regulate on/off
-    var on = (last_temp_preset * 1) > (last_temp_living * 1);
-    gpio_tools.regulateHeating(on);
+    gpio_tools.regulateHeating(
+      config.shouldStartHeating(undefined, last_temp_preset, last_temp_living, last_temp_osijek)
+    );
   });
 
   gpio_tools.getHeaterState(function(state) {
@@ -241,7 +300,7 @@ function collectAndRecordCurrTemps() {
 
     rrdb_tools.insertTemps(ts, last_temp_preset, last_temp_living, last_temp_osijek);
 
-    // cloud_tools.publishDataOnline(last_temp_preset, last_temp_living, last_temp_osijek);
+    cloud_tools.publishDataOnline(last_temp_preset, last_temp_living, last_temp_osijek);
   })
 }
 

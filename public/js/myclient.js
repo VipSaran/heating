@@ -1,12 +1,12 @@
 $.ajaxSetup({
-  timeout: 15000
+  timeout: 20000
 });
 
 var lastRefreshed = new Date().toLocaleString(); // fresh temp readout or fresh graph
 var dataRefreshInterval;
 var dataRefreshTimeout;
 
-var refreshImage = function(cb) {
+var getImage = function(cb) {
   var url = document.URL + 'refresh_image';
   console.log('URL=', url);
   $.ajax({
@@ -16,19 +16,11 @@ var refreshImage = function(cb) {
       console.log('/refresh_image API response received:', data);
       if (data) {
         $("#graph_day").html($("<img />", {
-          src: "assets-local/img/temperatures_graph.png",
+          src: "/img/temperatures_graph.png",
           title: "dnevni pogled"
         }));
-        $("#graph_week").html($("<img />", {
-          src: "assets-local/img/temperatures_graph_week.png",
-          title: "tjedni pogled"
-        }));
-        $("#graph_month").html($("<img />", {
-          src: "assets-local/img/temperatures_graph_month.png",
-          title: "mjesecni pogled"
-        }));
         $("#graph_hour").html($("<img />", {
-          src: "assets-local/img/temperatures_graph_hour.png",
+          src: "/img/temperatures_graph_hour.png",
           title: "pogled kroz jedan sat"
         }));
         lastRefreshed = new Date().toLocaleString();
@@ -50,23 +42,18 @@ var refreshImage = function(cb) {
       }
     }
   });
-}
+};
 
-var refreshTemps = function() {
-  var url = document.URL + 'get_temps';
+var getState = function() {
+  var url = document.URL + 'get_state';
   console.log('URL=', url);
   $.ajax({
     url: url,
     dataType: "json",
     success: function(data, textStatus, jqXHR) {
-      console.log('/get_temps API response received:', data);
+      console.log('/get_state API response received:', data);
 
-      $("#temp_osijek").html(data.temp_osijek);
-      $("#temp_preset").html(data.temp_preset);
-      $("#temp_living").html(data.temp_living);
-
-      lastRefreshed = new Date().toLocaleString();
-      $('#log').html('Posljednji puta osvježeno: ' + lastRefreshed);
+      refreshValues(data);
     },
     error: function(jqXHR, textStatus, errorThrown) {
       console.error(textStatus, errorThrown);
@@ -82,12 +69,12 @@ var refreshTemps = function() {
       $('#progress').modal('hide');
     }
   });
-}
+};
 
-var refreshData = function() {
+var refreshAll = function() {
   clearTimeout(dataRefreshTimeout);
   dataRefreshTimeout = setTimeout(function() {
-    refreshData();
+    refreshAll();
   }, 300000); // 300.000 = 300 s = 5 min
 
   $('#progress').modal({
@@ -96,8 +83,8 @@ var refreshData = function() {
     backdrop: true
   });
 
-  refreshImage(refreshTemps);
-}
+  getImage(getState);
+};
 
 var setPresetTemp = function(value) {
   var url = document.URL + 'set_preset_temp/' + value;
@@ -107,12 +94,8 @@ var setPresetTemp = function(value) {
     dataType: "json",
     success: function(data, textStatus, jqXHR) {
       console.log('/set_preset_temp API response received:', data);
-      $("#temp_osijek").html(data.temp_osijek);
-      $("#temp_preset").html(data.temp_preset);
-      $("#temp_living").html(data.temp_living);
 
-      lastRefreshed = new Date().toLocaleString();
-      $('#log').html('Posljednji puta osvježeno: ' + lastRefreshed);
+      refreshValues(data);
     },
     error: function(jqXHR, textStatus, errorThrown) {
       console.error(textStatus, errorThrown);
@@ -126,40 +109,7 @@ var setPresetTemp = function(value) {
       $('#error').removeClass('hidden').addClass('in');
     }
   });
-}
-
-var updateStates = function() {
-  var url = document.URL + 'get_states';
-  console.log('URL=', url);
-  $.ajax({
-    url: url,
-    dataType: "json",
-    success: function(data, textStatus, jqXHR) {
-      console.log('/get_states API response received:', data);
-      $("input#overrideswitch").prop('checked', data.overrideSwitch);
-      $("input#myonoffswitch").prop('checked', data.heatingSwitch);
-
-      if (data.overrideSwitch) {
-        $('#temp_preset_inc').removeClass('hidden');
-        $('#temp_preset_dec').removeClass('hidden');
-      } else {
-        $('#temp_preset_inc').addClass('hidden');
-        $('#temp_preset_dec').addClass('hidden');
-      }
-    },
-    error: function(jqXHR, textStatus, errorThrown) {
-      console.error(textStatus, errorThrown);
-      // console.error(jqXHR.statusText);
-      if (textStatus === "timeout") {
-        clearTimeout(dataRefreshTimeout);
-        $('#error_text').html('Pre dugo je vremena proteklo bez odgovora servera. Automatsko osvježavanje isključeno.');
-      } else {
-        $('#error_text').html(errorThrown);
-      }
-      $('#error').removeClass('hidden').addClass('in');
-    }
-  });
-}
+};
 
 var switchOverride = function() {
   var state = getOverrideSwitchBinaryState();
@@ -170,22 +120,8 @@ var switchOverride = function() {
     dataType: "json",
     success: function(data, textStatus, jqXHR) {
       console.log('/switch_override API response received:', data);
-      $("input#overrideswitch").prop('checked', state);
-      if (state) {
-        $('#temp_preset_inc').removeClass('hidden');
-        $('#temp_preset_dec').removeClass('hidden');
-      } else {
-        $('#temp_preset_inc').addClass('hidden');
-        $('#temp_preset_dec').addClass('hidden');
 
-        // no override --> use and show temp_preset
-        $("#temp_osijek").html(data.temp_osijek);
-        $("#temp_preset").html(data.temp_preset);
-        $("#temp_living").html(data.temp_living);
-
-        lastRefreshed = new Date().toLocaleString();
-        $('#log').html('Posljednji puta osvježeno: ' + lastRefreshed);
-      }
+      refreshValues(data);
     },
     error: function(jqXHR, textStatus, errorThrown) {
       console.error(textStatus, errorThrown);
@@ -199,7 +135,7 @@ var switchOverride = function() {
       $('#error').removeClass('hidden').addClass('in');
     }
   });
-}
+};
 
 var switchHeating = function() {
   var state = getHeatingSwitchBinaryState();
@@ -210,13 +146,8 @@ var switchHeating = function() {
     dataType: "json",
     success: function(data, textStatus, jqXHR) {
       console.log('/switch_heating API response received:', data);
-      $("input#myonoffswitch").prop('checked', state);
-      $("#temp_osijek").html(data.temp_osijek);
-      $("#temp_preset").html(data.temp_preset);
-      $("#temp_living").html(data.temp_living);
 
-      lastRefreshed = new Date().toLocaleString();
-      $('#log').html('Posljednji puta osvježeno: ' + lastRefreshed);
+      refreshValues(data);
     },
     error: function(jqXHR, textStatus, errorThrown) {
       console.error(textStatus, errorThrown);
@@ -230,6 +161,53 @@ var switchHeating = function() {
       $('#error').removeClass('hidden').addClass('in');
     }
   });
+};
+
+var switchHoliday = function() {
+  var state = getHolidaySwitchBinaryState();
+  var url = document.URL + 'switch_holiday/' + state;
+  console.log('URL=', url);
+  $.ajax({
+    url: url,
+    dataType: "json",
+    success: function(data, textStatus, jqXHR) {
+      console.log('/switch_holiday API response received:', data);
+
+      refreshValues(data);
+    },
+    error: function(jqXHR, textStatus, errorThrown) {
+      console.error(textStatus, errorThrown);
+      // console.error(jqXHR.statusText);
+      if (textStatus === "timeout") {
+        clearTimeout(dataRefreshTimeout);
+        $('#error_text').html('Pre dugo je vremena proteklo bez odgovora servera. Automatsko osvježavanje isključeno.');
+      } else {
+        $('#error_text').html('Za odabranu funkciju potrebno je odobrenje.');
+      }
+      $('#error').removeClass('hidden').addClass('in');
+    }
+  });
+};
+
+function refreshValues(data) {
+  $("#temp_osijek").html(data.temp_osijek);
+  $("#temp_preset").html(data.temp_preset);
+  $("#temp_living").html(data.temp_living);
+
+  $("input#overrideswitch").prop('checked', data.overrideSwitch);
+  $("input#myonoffswitch").prop('checked', data.heatingSwitch);
+  $("input#holidayswitch").prop('checked', data.holidaySwitch);
+
+  if (data.overrideSwitch) {
+    $('#temp_preset_inc').removeClass('hidden');
+    $('#temp_preset_dec').removeClass('hidden');
+  } else {
+    $('#temp_preset_inc').addClass('hidden');
+    $('#temp_preset_dec').addClass('hidden');
+  }
+
+  lastRefreshed = new Date().toLocaleString();
+  $('#log').html('Posljednji puta osvježeno: ' + lastRefreshed);
 }
 
 var getOverrideSwitchBinaryState = function() {
@@ -246,6 +224,12 @@ var isHeatingSwitchOn = function() {
   return $("input#myonoffswitch").is(":checked");
 }
 
+var getHolidaySwitchBinaryState = function() {
+  return isHolidaySwitchOn() ? 1 : 0;
+}
+var isHolidaySwitchOn = function() {
+  return $("input#holidayswitch").is(":checked");
+}
 
 $(document).ready(function() {
   $('.carousel').carousel({
@@ -256,13 +240,11 @@ $(document).ready(function() {
     $(this).toggleClass('is-hover');
   });
 
-  updateStates();
-
-  refreshData();
+  refreshAll();
 
   $("#temperatures_graph").click(function() {
     if (!$('.carousel-control').hasClass('is-hover')) {
-      refreshData();
+      refreshAll();
     }
   });
 
@@ -282,6 +264,11 @@ $(document).ready(function() {
   $('#myonoffswitch').on("click", function(event) {
     event.preventDefault();
     switchHeating();
+  });
+
+  $('#holidayswitch').on("click", function(event) {
+    event.preventDefault();
+    switchHoliday();
   });
 
   $('#error_close').click(function() {
