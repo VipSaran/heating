@@ -1,0 +1,40 @@
+{
+  "workday": [{
+    "name": "morning",
+    "from": [7, 0],
+    "temp": 20
+  }, {
+    "name": "forenoon",
+    "from": [8, 0],
+    "temp": 18
+  }, {
+    "name": "afternoon",
+    "from": [15, 45],
+    "temp": 21
+  }, {
+    "name": "evening",
+    "from": [20, 0],
+    "temp": 21
+  }, {
+    "name": "night",
+    "from": [22, 45],
+    "temp": 17
+  }],
+  "weekend": [{
+    "name": "morning",
+    "from": [8, 30],
+    "temp": 21
+  }, {
+    "name": "forenoon",
+    "from": [9, 30],
+    "temp": 21
+  }, {
+    "name": "evening",
+    "from": [19, 0],
+    "temp": 21
+  }, {
+    "name": "night",
+    "from": [23, 15],
+    "temp": 17
+  }]
+}

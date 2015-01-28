@@ -1,0 +1,7 @@
+app/.auth
+log/heating.*
+node_modules/
+public/img/temperatures_graph.png
+public/img/temperatures_graph_hour.png
+public/img/temperatures_graph_month.png
+public/img/temperatures_graph_week.png

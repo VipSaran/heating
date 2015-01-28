@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
+  <link rel="shortcut icon" href="/img/favicon.png">
+
+  <title>Grijanje</title>
+
+  <link href="/css/bootstrap.css" rel="stylesheet">
+  <link href="/css/onoffswitch.css" rel="stylesheet">
+  <link href="/css/local.css" rel="stylesheet">
+</head>
+
+<body>
+  <div id="wrap">
+    <div class="container fill">
+
+      <div id="error" class="alert alert-danger hidden fade">
+        <button type="button" id="error_close" class="close">&times;</button>
+        <strong>Greška! </strong>
+        <span id="error_text"></span>
+      </div>
+
+      <div class="modal fade" id="progress" tabindex="-1" role="dialog" aria-labelledby="progressLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-body">
+              Loading…
+              <img src="/img/waiting.gif"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="temperatures_graph">
+        <div id="myCarousel" class="carousel slide">
+          <div class="carousel-inner">
+            <div id="graph_day" class="item active">
+              <img src="/img/temperatures_graph.png" title="dnevni pogled"/>
+            </div>
+            <div id="graph_hour" class="item">
+              <img src="/img/temperatures_graph_hour.png" title="pogled kroz jedan sat"/>
+            </div>
+          </div>
+
+          <a class="left carousel-control" href="#myCarousel" data-slide="prev">
+            <span class="glyphicon glyphicon-circle-arrow-left"></span>
+          </a>
+          <a class="right carousel-control" href="#myCarousel" data-slide="next">
+            <span class="glyphicon glyphicon-circle-arrow-right"></span>
+          </a>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-4">
+          Osijek:
+          <div class="temp_readout temp_osijek">
+            <span id="temp_osijek">&nbsp;&nbsp;</span>&deg;C
+          </div>
+        </div>
+        <div class="col-md-4">
+          zadano:
+          <div class="temp_readout temp_preset">
+            <a class="btn btn-default hidden" id="temp_preset_dec">&#45;&nbsp;1&deg;C</a>
+            <span id="temp_preset">&nbsp;&nbsp;</span>&deg;C
+            <a class="btn btn-default hidden" id="temp_preset_inc">&#43;&nbsp;1&deg;C</a>
+          </div>
+          <label class="overrideswitch" title="Manualni mod poništava automatske vremenske profile">
+            <input type="checkbox" name="overrideswitch" id="overrideswitch" checked="checked">&nbsp;Manualni mod
+          </label>
+        </div>
+        <div class="col-md-4">
+          dnevna soba:
+          <div class="temp_readout temp_living">
+            <span id="temp_living">&nbsp;&nbsp;</span>&deg;C
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="onoffswitch">
+          <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="myonoffswitch" checked="checked">
+          <label class="onoffswitch-label" for="myonoffswitch">
+            <div class="onoffswitch-inner">
+              <div class="onoffswitch-active">
+                <div class="onoffswitch-switch">ON</div>
+              </div>
+              <div class="onoffswitch-inactive">
+                <div class="onoffswitch-switch">OFF</div>
+              </div>
+            </div>
+          </label>
+        </div>
+      </div>
+      <div class="row text-center">
+        <label class="holidayswitch" title="Na praznicima je uvijek vikend!">
+          <input type="checkbox" name="holidayswitch" id="holidayswitch" checked="checked">&nbsp;Praznici!
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div id="footer">
+    <div class="container">
+      <div id="log"></div>
+    </div>
+  </div>
+
+  <script src="/js/jquery-1.10.2.min.js"></script>
+  <script src="/js/bootstrap.min.js"></script>
+  <script src="/js/json2.js"></script>
+  <script src="/js/myclient.js"></script>
+</body>
+</html>
