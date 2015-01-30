@@ -45,14 +45,14 @@ Installation:
 
 ## Initial Configuration
 
-**Relay pins** and temperanture **sensor 1-wire address** are set up in `/app/gpio-tools.js`:
+**Relay pins** and temperature **sensor 1-wire address** are set up in `/app/gpio-tools.js`:
 
   - `gpioPinHeater` & `gpioPinPump` variables are using *header* pin numbers. (You can refer to [this mapping](http://wiringpi.com/wp-content/uploads/2013/03/gpio1.png) to distinguish between header, BCM and wiringPi pin numbering),
   - `tempLivingSensorId` variable represents the (living room) temperature sensor directory name on 1-wire bus.
 
 **Outside temperature** is gathered from a 3rd party weather service ([forecast.io](https://developer.forecast.io/docs/v2)) which requires an API key that needs to be specified in `/app/weather-tools.js` variable `options.APIKey`. Frequency of accessing this API (`config.collect_record_interval`) is configured so that the number of free daily requests is not exceeded.
 
-Application checks the origin of the (API) request and, based on `config.allow_unauthenticated_lan` switch, doesn't restrict write-access for *localy* originated requests, but if accessed *remotely* (i.e. from outside of LAN) then the **authentication** (username & password) is enforced for application (API) write-access. To create a user, simply run `node createUser.js username password`. Password is hashed and, for simplicity, stored as JSON in `/app/.auth` file.
+Application checks the origin of the (API) request and, based on `config.allow_unauthenticated_lan` switch, doesn't restrict write-access for *locally* originated requests, but if accessed *remotely* (i.e. from outside of LAN) then the **authentication** (username & password) is enforced for application (API) write-access. To create a user, simply run `node createUser.js username password`. Password is hashed and, for simplicity, stored as JSON in `/app/.auth` file.
 
 Optionally, to enable online **scrobbling** of measurements (currently disabled) change the value of `scrobble_data_online` in `/app/config-tools.js` and set up a [Sen.se](http://open.sen.se/dev/) account API key to be used in variable `sense_url` in `/app/cloud-tools.js`.
 
