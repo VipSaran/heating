@@ -1,5 +1,9 @@
 # Heating
 
+A personal effort for improving living standard through home heating automation :)
+
+[Slides.com](slides.com) presentation introducing the project and (hopefully) explaining architecture and design decisions is available [here](http://slides.com/saran/heating/#/).
+
 ## Dependencies
 
 ### Node.js
