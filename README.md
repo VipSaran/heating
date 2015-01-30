@@ -2,13 +2,13 @@
 
 A personal effort for improving living standard through home heating automation :)
 
-[Slides.com](slides.com) presentation introducing the project and (hopefully) explaining architecture and design decisions is available [here](http://slides.com/saran/heating/#/).
+[Slides.com](http://slides.com) presentation introducing the project and (hopefully) explaining architecture and design decisions is available [here](http://slides.com/saran/heating/#/).
 
 ## Dependencies
 
 ### Node.js
 
-[Node.js](nodejs.org) is a platform built on Chrome's JavaScript runtime for easily building fast, scalable network applications. Node.js uses an event-driven, non-blocking I/O model that makes it lightweight and efficient, perfect for data-intensive real-time applications that run across distributed devices.
+[Node.js](http://nodejs.org) is a platform built on Chrome's JavaScript runtime for easily building fast, scalable network applications. Node.js uses an event-driven, non-blocking I/O model that makes it lightweight and efficient, perfect for data-intensive real-time applications that run across distributed devices.
 
 #### Installation
 
