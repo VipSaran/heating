@@ -102,7 +102,7 @@ var getTempLiving = function(last_temp_living, cb) {
               // console.log('  temp=', temp);
 
               if (!isNaN(temp)) {
-                tempLiving = parseFloat(temp / 1000).toFixed(1);
+                tempLiving = parseFloat((temp / 1000).toFixed(1));
                 console.log('  tempLiving=', tempLiving);
 
                 if (tempLiving < 1 || tempLiving > 30) {
@@ -124,7 +124,7 @@ var getTempLiving = function(last_temp_living, cb) {
           // console.log('  temp=', temp);
 
           if (!isNaN(temp)) {
-            tempLiving = parseFloat(temp).toFixed(1);
+            tempLiving = parseFloat((temp * 1).toFixed(1));
             console.log('  tempLiving=', tempLiving);
 
             if (tempLiving < 1 || tempLiving > 30) {

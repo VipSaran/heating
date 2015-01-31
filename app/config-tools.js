@@ -301,7 +301,7 @@ var shouldStartHeating = function(millis, temp_preset, temp_living, temp_osijek)
       }
       console.log('  Cph (corrected)=', Cph);
 
-      // see how long to reach that heat
+      // see how long to reach that temp
       var timeToReachTempDiff = parseFloat((tempDiffToReach / Cph).toFixed(2));
       console.log('  timeToReachTempDiff=', timeToReachTempDiff, 'hours');
 

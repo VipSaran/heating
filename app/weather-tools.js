@@ -31,7 +31,7 @@ var getTemp = function(cb) {
         // var roundTempF = tempF.toFixed(1);
 
         var tempC = ((data.currently.temperature - 32) * 5 / 9);
-        var roundTempC = tempC.toFixed(1);
+        var roundTempC = parseFloat(tempC.toFixed(1));
 
         // console.log('  temp (F):', roundTempF, tempF);
         // console.log('  temp (C):', roundTempC, tempC);

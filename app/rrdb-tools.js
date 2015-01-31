@@ -21,14 +21,14 @@ function createRRD_temps() {
   console.log("rrdb-tools.createRRD_temps()");
 
   var createStr = "rrdtool create " + config.app_dir + "/" + config.rrd_temps_name + " " + //
-  "--start N --step 300 " + // data bucket 5 min long
-  "DS:temp_preset:GAUGE:600:-30:40 " + // human defined
-  "DS:temp_living:GAUGE:600:-30:40 " + // measured in livingroom
-  "DS:temp_osijek:GAUGE:600:-30:40 " + // online value
-  "RRA:AVERAGE:0.5:1:288 " + // 5 min avg., last 24 hours
-  "RRA:AVERAGE:0.5:12:168 " + // 1 hour avg., last 7 days
-  "RRA:AVERAGE:0.5:48:315 " + // 4 hour avg., last 30 days
-  "RRA:AVERAGE:0.5:288:365" // 1 day avg., last 365 days
+    "--start N --step 300 " + // data bucket 5 min long
+    "DS:temp_preset:GAUGE:600:-30:40 " + // human defined
+    "DS:temp_living:GAUGE:600:-30:40 " + // measured in livingroom
+    "DS:temp_osijek:GAUGE:600:-30:40 " + // online value
+    "RRA:AVERAGE:0.5:1:288 " + // 5 min avg., last 24 hours
+    "RRA:AVERAGE:0.5:12:168 " + // 1 hour avg., last 7 days
+    "RRA:AVERAGE:0.5:48:315 " + // 4 hour avg., last 30 days
+    "RRA:AVERAGE:0.5:288:365" // 1 day avg., last 365 days
 
   execute(createStr, function(out, err) {
     if (err) throw err;
@@ -39,9 +39,9 @@ function createRRD_state() {
   console.log("rrdb-tools.createRRD_state()");
 
   var createStr = "rrdtool create " + config.app_dir + "/" + config.rrd_state_name + " " + //
-  "--start N --step 30 " + // data bucket 30 s long
-  "DS:heater_state:GAUGE:60:0:1 " + // heater state (0/1)
-  "RRA:AVERAGE:0.5:1:2880" // last value in 30 s, for last 1 hour
+    "--start N --step 30 " + // data bucket 30 s long
+    "DS:heater_state:GAUGE:60:0:1 " + // heater state (0/1)
+    "RRA:AVERAGE:0.5:1:2880" // last value in 30 s, for last 1 hour
 
   execute(createStr, function(out, err) {
     if (err) throw err;
@@ -89,9 +89,9 @@ var getLastTemps = function(cb) {
     if (err) {
       if (typeof(cb) == "function") {
         cb({
-          "temp_preset": 22,
-          "temp_living": 22,
-          "temp_osijek": 10
+          "temp_preset": 21,
+          "temp_living": 0,
+          "temp_osijek": 0
         });
       }
     }
@@ -109,15 +109,15 @@ var getLastTemps = function(cb) {
       // console.log("  tabs:", tabs);
 
       temps = {
-        "temp_preset": tabs[1],
-        "temp_living": tabs[2],
-        "temp_osijek": tabs[3]
+        "temp_preset": tabs[1] * 1,
+        "temp_living": tabs[2] * 1,
+        "temp_osijek": tabs[3] * 1
       };
 
       if (typeof(cb) == "function") {
         if (temps == undefined || temps == "undefined") {
           temps = {
-            "temp_preset": 23,
+            "temp_preset": 21,
             "temp_living": 0,
             "temp_osijek": 0
           };
@@ -129,7 +129,7 @@ var getLastTemps = function(cb) {
       console.error("  Parsing error: ", err);
       if (typeof(cb) == "function") {
         temps = {
-          "temp_preset": 23,
+          "temp_preset": 21,
           "temp_living": 0,
           "temp_osijek": 0
         };
