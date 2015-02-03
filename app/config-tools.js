@@ -298,8 +298,8 @@ var shouldStartHeating = function(millis, temp_preset, temp_living, temp_osijek)
       console.log('  Cph=', Cph);
       if (Cph < 0.5) {
         Cph = 0.5;
-      }
-      console.log('  Cph (corrected)=', Cph);
+        console.log('  Cph (corrected)=', Cph);
+      }      
 
       // see how long to reach that temp
       var timeToReachTempDiff = parseFloat((tempDiffToReach / Cph).toFixed(2));
