@@ -1,6 +1,7 @@
 var fs = require('fs');
 var exec = require('child_process').exec;
 var config = require('./config-tools');
+var logger = config.logger;
 
 var img_name = "temperatures_graph.png";
 var img_name_hour = "temperatures_graph_hour.png";
@@ -9,16 +10,16 @@ var img_name_month = "temperatures_graph_month.png";
 
 function execute(command, callback) {
   exec(command, function(error, stdout, stderr) {
-    console.log("  command: ", command);
-    console.log("  error: ", error);
-    console.log("  stdout: ", stdout);
-    console.log("  stderr: ", stderr);
+    logger.debug("  command: ", command);
+    logger.debug("  error: ", error);
+    logger.debug("  stdout: ", stdout);
+    logger.debug("  stderr: ", stderr);
     callback(stdout, stderr);
   });
 }
 
 function createRRD_temps() {
-  console.log("rrdb-tools.createRRD_temps()");
+  logger.info("rrdb-tools.createRRD_temps()");
 
   var createStr = "rrdtool create " + config.app_dir + "/" + config.rrd_temps_name + " " + //
     "--start N --step 300 " + // data bucket 5 min long
@@ -36,7 +37,7 @@ function createRRD_temps() {
 }
 
 function createRRD_state() {
-  console.log("rrdb-tools.createRRD_state()");
+  logger.info("rrdb-tools.createRRD_state()");
 
   var createStr = "rrdtool create " + config.app_dir + "/" + config.rrd_state_name + " " + //
     "--start N --step 30 " + // data bucket 30 s long
@@ -49,7 +50,7 @@ function createRRD_state() {
 }
 
 var init = function() {
-  console.log("rrdb-tools.init()");
+  logger.info("rrdb-tools.init()");
 
   if (!fs.existsSync(config.app_dir + "/" + config.rrd_temps_name)) {
     createRRD_temps();
@@ -81,7 +82,7 @@ var init = function() {
 // Should be called only at application start.
 // Later, live values are taken directly from the app context.
 var getLastTemps = function(cb) {
-  console.log("rrdb-tools.getLastTemps()");
+  logger.info("rrdb-tools.getLastTemps()");
 
   var lastUpdateStr = "rrdtool lastupdate " + config.app_dir + "/" + config.rrd_temps_name;
 
@@ -106,7 +107,7 @@ var getLastTemps = function(cb) {
       var lines = out.replace(/\r\n/g, "\n").split("\n");
 
       var tabs = lines[2].split(" ");
-      // console.log("  tabs:", tabs);
+      // logger.debug("  tabs:", tabs);
 
       temps = {
         "temp_preset": tabs[1] * 1,
@@ -126,7 +127,7 @@ var getLastTemps = function(cb) {
       }
 
     } catch (err) {
-      console.error("  Parsing error: ", err);
+      logger.error("  Parsing error: ", err);
       if (typeof(cb) == "function") {
         temps = {
           "temp_preset": 21,
@@ -140,33 +141,33 @@ var getLastTemps = function(cb) {
 };
 
 var insertTemps = function(ts, temp_preset, temp_living, temp_osijek) {
-  console.log("rrdb-tools.insertTemps()");
+  logger.info("rrdb-tools.insertTemps()");
 
   var updateStr = "rrdtool update " + config.app_dir + "/" + config.rrd_temps_name + " " +
     ts + ":" + temp_preset + ":" + temp_living + ":" + temp_osijek;
 
   execute(updateStr, function(out, err) {
     if (err)
-      console.error("  " + config.rrd_temps_name + " update error:", err);
+      logger.error("  " + config.rrd_temps_name + " update error:", err);
   });
 };
 
 var insertState = function(ts, heater_state) {
-  console.log("rrdb-tools.insertState()");
+  logger.info("rrdb-tools.insertState()");
 
   var updateStr = "rrdtool update " + config.app_dir + "/" + config.rrd_state_name + " " +
     ts + ":" + heater_state;
 
   execute(updateStr, function(out, err) {
     if (err)
-      console.error("  " + config.rrd_state_name + " update error:", err);
+      logger.error("  " + config.rrd_state_name + " update error:", err);
   });
 };
 
 var lastPaintedMillis = 0;
 
 var paintTemps = function(cb) {
-  console.log("rrdb-tools.paintTemps()");
+  logger.info("rrdb-tools.paintTemps()");
 
   var currTimeMillis = new Date().getTime();
   if (currTimeMillis < (lastPaintedMillis + 300000)) {
@@ -206,9 +207,9 @@ var paintTemps = function(cb) {
 
   execute(graphStrDay + graphStrDefaults, function(out, err) {
     if (err) {
-      console.error(err);
+      logger.error(err);
     } else {
-      console.log("  painted DAY");
+      logger.debug("  painted DAY");
     }
 
     // only update if actually painted
@@ -223,7 +224,7 @@ var paintTemps = function(cb) {
 };
 
 var paintTempsAndState = function(cb) {
-  console.log("rrdb-tools.paintTempsAndState()");
+  logger.info("rrdb-tools.paintTempsAndState()");
 
   var graphStrHour = 'rrdtool graph ' + config.img_dir + '/' + img_name_hour + ' ' +
     '--start -3600 --end N ' +
@@ -244,9 +245,9 @@ var paintTempsAndState = function(cb) {
 
   execute(graphStrHour + graphStrDefaults, function(out, err) {
     if (err) {
-      console.error(err);
+      logger.error(err);
     } else {
-      console.log("  painted HOUR");
+      logger.debug("  painted HOUR");
     }
 
     if (typeof(cb) == "function") {

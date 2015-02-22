@@ -2,6 +2,7 @@ var async = require('async');
 var gpio = require("pi-gpio");
 var exec = require('child_process').exec;
 var config = require('./config-tools');
+var logger = config.logger;
 
 var gpioPinHeater = 11; // header pin 11 = BCM GPIO 17 = GPIO/wiringPi 0
 var gpioPinPump = 12; // header pin 12 = BCM GPIO 18 = GPIO/wiringPi 1
@@ -14,38 +15,38 @@ var tempPlaySensorId = '28-00000505081c'; // on 1-wire bus
 
 function execute(command, callback) {
   exec(command, function(error, stdout, stderr) {
-    console.log("  command: ", command);
-    console.log("  error: ", error);
-    console.log("  stdout: ", stdout);
-    console.log("  stderr: ", stderr);
+    logger.debug("  command: ", command);
+    logger.debug("  error: ", error);
+    logger.debug("  stdout: ", stdout);
+    logger.debug("  stderr: ", stderr);
     callback(stdout, stderr);
   });
 }
 
 var init = function() {
-  console.log('gpio-tools.init()');
+  logger.info('gpio-tools.init()');
 
   // init 1-wire master
   // var init_owserver = "/opt/owfs/bin/owserver --i2c=/dev/i2c-1:ALL"
   // execute(init_owserver, function(out, err) {
   //   if (err) {
-  //     console.error(err);
+  //     logger.error(err);
   //   }
   // });
 
   gpio.close(gpioPinHeater, function(err) {
     if (err) {
-      console.error('  ERROR', err);
+      logger.error(err);
     } else {
-      console.log('  Closed pin', gpioPinHeater);
+      logger.debug('  Closed pin', gpioPinHeater);
     }
   });
 
   gpio.close(gpioPinPump, function(err) {
     if (err) {
-      console.error('  ERROR', err);
+      logger.error(err);
     } else {
-      console.log('  Closed pin', gpioPinPump);
+      logger.debug('  Closed pin', gpioPinPump);
     }
   });
 
@@ -65,15 +66,15 @@ var init = function() {
     }
   ], function(err, results) {
     if (err) {
-      console.error('  ERROR', err);
+      logger.error(err);
     } else {
-      console.log('  Opened GPIO pins', results);
+      logger.debug('  Opened GPIO pins', results);
     }
   });
 };
 
 var getTempLiving = function(last_temp_living, cb) {
-  console.log('gpio-tools.getTempLiving()', last_temp_living);
+  logger.info('gpio-tools.getTempLiving()', last_temp_living);
   var readStr = "cat /sys/bus/w1/devices/" + tempLivingSensorId + "/w1_slave";
   // var readStr = "/opt/owfs/bin/owread " + tempLivingSensorId + "/temperature";
 
@@ -82,62 +83,62 @@ var getTempLiving = function(last_temp_living, cb) {
   var tempLiving;
   execute(readStr, function(out, err) {
     if (err) {
-      console.error(err);
+      logger.error(err);
       tempLiving = last_temp_living;
     } else {
       try {
         if (bus) {
           var lines = out.replace(/\r\n/g, "\n").split("\n");
-          // console.log(lines);
+          // logger.debug(lines);
 
           if (lines == null || lines.length != 3) {
-            console.error('  ERROR: Wrong sensor readout format.');
+            logger.error('Wrong sensor readout format.');
             tempLiving = last_temp_living;
           } else {
             var crc_OK = lines[0].substring(lines[0].length - 3) == "YES";
-            // console.log('  crc=', crc_OK);
+            // logger.debug('  crc=', crc_OK);
 
             if (crc_OK) {
               var temp = lines[1].substring(lines[1].indexOf('t=') + 2);
-              // console.log('  temp=', temp);
+              // logger.debug('  temp=', temp);
 
               if (!isNaN(temp)) {
                 tempLiving = parseFloat((temp / 1000).toFixed(1));
-                console.log('  tempLiving=', tempLiving);
+                logger.debug('  tempLiving=', tempLiving);
 
                 if (tempLiving < 1 || tempLiving > 30) {
-                  console.error('  ERROR: Value outside of reasonable range.');
+                  logger.error('Value outside of reasonable range.');
                   tempLiving = last_temp_living;
                 }
               } else {
-                console.error('  ERROR: Temperature value not a number.');
+                logger.error('Temperature value not a number.');
                 tempLiving = last_temp_living;
               }
             } else {
-              console.error('  ERROR: Sensor readout CRC failed.');
+              logger.error('Sensor readout CRC failed.');
               tempLiving = last_temp_living;
             }
           }
         } else {
-          // console.log('  out=', out);
+          // logger.debug('  out=', out);
           var temp = out.replace(/^\s+|\s+$/g, '');
-          // console.log('  temp=', temp);
+          // logger.debug('  temp=', temp);
 
           if (!isNaN(temp)) {
             tempLiving = parseFloat((temp * 1).toFixed(1));
-            console.log('  tempLiving=', tempLiving);
+            logger.debug('  tempLiving=', tempLiving);
 
             if (tempLiving < 1 || tempLiving > 30) {
-              console.error('  ERROR: Value outside of reasonable range.');
+              logger.error('Value outside of reasonable range.');
               tempLiving = last_temp_living;
             }
           } else {
-            console.error('  ERROR: Temperature value not a number.');
+            logger.error('Temperature value not a number.');
             tempLiving = last_temp_living;
           }
         }
       } catch (exception) {
-        console.error('  ERROR: Exception caught while parsing: ', exception);
+        logger.error('Exception caught while parsing: ', exception);
         tempLiving = last_temp_living;
       }
     }
@@ -151,11 +152,11 @@ var getTempLiving = function(last_temp_living, cb) {
 var pumpOffTimeout;
 
 var getHeaterState = function(cb) {
-  console.log('gpio-tools.getHeaterState()');
+  logger.debug('gpio-tools.getHeaterState()');
 
   gpio.read(gpioPinHeater, function(err, value) {
     if (err) throw err;
-    console.log('  heaterState=', value);
+    logger.debug('  heaterState=', value);
     if (typeof(cb) == "function") {
       cb(value);
     }
@@ -163,11 +164,11 @@ var getHeaterState = function(cb) {
 };
 
 var setHeaterState = function(value, cb) {
-  console.log('gpio-tools.setHeaterState()', value);
+  logger.debug('gpio-tools.setHeaterState()', value);
   gpio.write(gpioPinHeater, value, function(err) {
     if (err) throw err;
 
-    console.log('  Heater set to', value);
+    logger.debug('  Heater set to', value);
 
     if (typeof(cb) == "function") {
       cb();
@@ -176,11 +177,11 @@ var setHeaterState = function(value, cb) {
 };
 
 var getPumpState = function(cb) {
-  console.log('gpio-tools.getPumpState()');
+  logger.debug('gpio-tools.getPumpState()');
 
   gpio.read(gpioPinPump, function(err, value) {
     if (err) throw err;
-    console.log('  pumpState=', value);
+    logger.debug('  pumpState=', value);
     if (typeof(cb) == "function") {
       cb(value);
     }
@@ -188,11 +189,11 @@ var getPumpState = function(cb) {
 };
 
 var setPumpState = function(value, cb) {
-  console.log('gpio-tools.setPumpState()', value);
+  logger.debug('gpio-tools.setPumpState()', value);
   gpio.write(gpioPinPump, value, function(err) {
     if (err) throw err;
 
-    console.log('  Pump set to', value);
+    logger.debug('  Pump set to', value);
 
     if (typeof(cb) == "function") {
       cb();
@@ -201,7 +202,7 @@ var setPumpState = function(value, cb) {
 };
 
 var regulateHeating = function(turnOn) {
-  console.log('gpio-tools.regulateHeating()', turnOn);
+  logger.debug('gpio-tools.regulateHeating()', turnOn);
 
   if (!config.heatingSwitch) {
     getHeaterState(function(heaterState) {
@@ -210,7 +211,7 @@ var regulateHeating = function(turnOn) {
       }
     });
 
-    console.log('  heating is switched off --> skip regulating');
+    logger.debug('  heating is switched off --> skip regulating');
     return;
   }
 
@@ -247,7 +248,7 @@ var regulateHeating = function(turnOn) {
 // a soft switch enabling or disabling the regulation
 // only overrides temperature regulation for switched off state
 var switchHeating = function(turnOn) {
-  console.log('gpio-tools.switchHeating()', turnOn);
+  logger.debug('gpio-tools.switchHeating()', turnOn);
 
   if (!turnOn) {
     getHeaterState(function(heaterState) {
@@ -265,29 +266,29 @@ var switchHeating = function(turnOn) {
 };
 
 var exitGracefully = function(cb) {
-  console.log('gpio-tools.exitGracefully()');
+  logger.debug('gpio-tools.exitGracefully()');
 
   async.series([
 
     function(callback) {
       gpio.write(gpioPinHeater, 0, function(err) {
-        console.log('  Closing pin', gpioPinHeater);
+        logger.debug('  Closing pin', gpioPinHeater);
         gpio.close(gpioPinHeater);
         callback(err, gpioPinHeater);
       });
     },
     function(callback) {
       gpio.write(gpioPinPump, 0, function(err) {
-        console.log('  Closing pin', gpioPinPump);
+        logger.debug('  Closing pin', gpioPinPump);
         gpio.close(gpioPinPump);
         callback(err, gpioPinPump);
       });
     }
   ], function(err, results) {
     if (err) {
-      console.error('ERROR shutting down relay pins', err);
+      logger.error('Error shutting down relay pins', err);
     } else {
-      console.log('Closed GPIO pins', results);
+      logger.debug('Closed GPIO pins', results);
     }
 
     if (typeof(cb) == "function") {

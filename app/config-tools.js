@@ -1,5 +1,8 @@
 var fs = require('fs');
 var path = require('path');
+var logger = require('winston');
+logger.remove(logger.transports.Console);
+logger.add(logger.transports.Console, {'timestamp': true, 'showLevel': false, 'level': 'debug'});
 
 var config_file_name = 'config.json';
 var timetable_file_name = 'timetable.json';
@@ -40,7 +43,7 @@ var holidaySwitch;
 })();
 
 var init = function(cb) {
-  console.log("config-tools.init()");
+  logger.info("config-tools.init()");
 
   readConfig(function() {
     readTimeTable(cb);
@@ -48,17 +51,17 @@ var init = function(cb) {
 };
 
 var readConfig = function(cb) {
-  console.log("config-tools.readConfig()");
+  logger.info("config-tools.readConfig()");
 
   fs.readFile(app_dir + '/' + config_file_name, 'utf8', function(err, data_json) {
     if (err) {
-      console.error('  error=', err);
+      logger.error(err);
       overrideSwitch = false;
       heatingSwitch = true;
       holidaySwitch = false;
     } else {
       var data = JSON.parse(data_json);
-      console.log('  config=', data);
+      logger.debug('  config=', data);
       overrideSwitch = data.overrideSwitch;
       heatingSwitch = data.heatingSwitch;
       holidaySwitch = data.holidaySwitch;
@@ -71,7 +74,7 @@ var readConfig = function(cb) {
 };
 
 var writeConfig = function(cb) {
-  console.log("config-tools.writeConfig()");
+  logger.info("config-tools.writeConfig()");
 
   var config = {
     "overrideSwitch": overrideSwitch,
@@ -81,9 +84,9 @@ var writeConfig = function(cb) {
 
   fs.writeFile(app_dir + '/' + config_file_name, JSON.stringify(config), function(err) {
     if (err) {
-      console.error('  error=', err);
+      logger.error(err);
     } else {
-      console.log('  config.json written');
+      logger.debug('  config.json written');
     }
     if (typeof(cb) == "function") {
       cb();
@@ -123,7 +126,7 @@ Object.defineProperty(exports, "holidaySwitch", {
 
 
 var readTimeTable = function(cb) {
-  console.log("config-tools.readTimeTable()");
+  logger.info("config-tools.readTimeTable()");
 
   if (typeof timeTableData != 'undefined') {
     if (typeof(cb) == "function") {
@@ -132,11 +135,11 @@ var readTimeTable = function(cb) {
   } else {
     fs.readFile(app_dir + '/' + timetable_file_name, 'utf8', function(err, data_json) {
       if (err) {
-        console.error('  error=', err);
+        logger.error(err);
         timeTableData = null;
       } else {
         timeTableData = JSON.parse(data_json);
-        console.log("  time-table data=", timeTableData);
+        logger.debug("  time-table data=", timeTableData);
       }
 
       if (typeof(cb) == "function") {
@@ -147,14 +150,14 @@ var readTimeTable = function(cb) {
 };
 
 var getTimeTableTemp = function(millis) {
-  console.log("config-tools.getTimeTableTemp()");
+  logger.info("config-tools.getTimeTableTemp()");
 
   if (millis === undefined) {
     millis = new Date().getTime();
   }
 
   var now = new Date(millis);
-  // console.log('  now=', now);
+  // logger.debug('  now=', now);
   var presets;
 
   if (!holidaySwitch && now.isWorkday()) {
@@ -164,19 +167,19 @@ var getTimeTableTemp = function(millis) {
   }
 
   var currHour = now.getHours();
-  // console.log('  currHour=', currHour);
+  // logger.debug('  currHour=', currHour);
   var currMinute = now.getMinutes();
-  // console.log('  currMinute=', currMinute);
+  // logger.debug('  currMinute=', currMinute);
 
   var matchingPreset;
   for (var i = presets.length - 1; i >= 0; i--) {
-    // console.log('  presets[' + i + ']=', presets[i]);
+    // logger.debug('  presets[' + i + ']=', presets[i]);
     var presetHour = presets[i].from[0];
     var presetMinute = presets[i].from[1];
     if (presetHour > currHour) {
-      // console.log('  1 future --> continue search');
+      // logger.debug('  1 future --> continue search');
     } else if (presetHour == currHour && presetMinute > currMinute) {
-      // console.log('  2 future --> continue search');
+      // logger.debug('  2 future --> continue search');
     } else {
       if (i != presets.length) {
         matchingPreset = presets[i];
@@ -188,9 +191,9 @@ var getTimeTableTemp = function(millis) {
 
     if (i == 0) {
       // time < first preset today = time > last preset yesterday
-      // console.log('  continuation of "night" from previous day');
+      // logger.debug('  continuation of "night" from previous day');
       var yesterday = new Date(now.getTime() - (24 * 60 * 60 * 1000));
-      // console.log('  yesterday=', yesterday);
+      // logger.debug('  yesterday=', yesterday);
       if (!holidaySwitch && yesterday.isWorkday()) {
         presets = timeTableData.workday;
       } else {
@@ -200,21 +203,21 @@ var getTimeTableTemp = function(millis) {
       matchingPreset = presets[presets.length - 1];
     }
   }
-  // console.log('  matchingPreset=', matchingPreset);
+  // logger.debug('  matchingPreset=', matchingPreset);
 
-  console.log('  matchingPreset.temp=', matchingPreset.temp);
+  logger.info('  matchingPreset.temp=', matchingPreset.temp);
   return matchingPreset.temp;
 };
 
 var getNextTimeTable = function(millis) {
-  console.log("config-tools.getNextTimeTable()");
+  logger.info("config-tools.getNextTimeTable()");
 
   if (millis === undefined) {
     millis = new Date().getTime();
   }
 
   var now = new Date(millis);
-  // console.log('  now=', now);
+  // logger.debug('  now=', now);
   var presets;
 
   if (!holidaySwitch && now.isWorkday()) {
@@ -224,32 +227,32 @@ var getNextTimeTable = function(millis) {
   }
 
   var currHour = now.getHours();
-  // console.log('  currHour=', currHour);
+  // logger.debug('  currHour=', currHour);
   var currMinute = now.getMinutes();
-  // console.log('  currMinute=', currMinute);
+  // logger.debug('  currMinute=', currMinute);
 
   var futurePreset;
   for (var i = presets.length - 1; i >= 0; i--) {
-    console.log('  presets[' + i + ']=', presets[i]);
+    logger.debug('  presets[' + i + ']=', presets[i]);
 
     var presetHour = presets[i].from[0];
     var presetMinute = presets[i].from[1];
     if (presetHour > currHour) {
-      console.log('  1 future --> continue search');
+      logger.debug('  1 future --> continue search');
       futurePreset = presets[i];
     } else if (presetHour == currHour && presetMinute > currMinute) {
-      console.log('  2 future --> continue search');
+      logger.debug('  2 future --> continue search');
       futurePreset = presets[i];
     } else if (futurePreset !== undefined) {
-      console.log('  break');
+      logger.debug('  break');
       break;
     }
 
     if (i == 0 && futurePreset === undefined) {
       // time > last preset today = time < first preset tomorrow
-      console.log('  target is "morning" of next day');
+      logger.debug('  target is "morning" of next day');
       var tomorrow = new Date(now.getTime() + (24 * 60 * 60 * 1000));
-      console.log('  tomorrow=', tomorrow);
+      logger.debug('  tomorrow=', tomorrow);
       if (!holidaySwitch && tomorrow.isWorkday()) {
         presets = timeTableData.workday;
       } else {
@@ -259,78 +262,79 @@ var getNextTimeTable = function(millis) {
       futurePreset = presets[0];
     }
   }
-  // console.log('  futurePreset=', futurePreset);
+  // logger.debug('  futurePreset=', futurePreset);
 
-  // console.log('  futurePreset.temp=', futurePreset.temp);
+  // logger.debug('  futurePreset.temp=', futurePreset.temp);
 
-  // console.log('## elapsed:', new Date().getTime() - now.getTime());
+  // logger.debug('## elapsed:', new Date().getTime() - now.getTime());
   return futurePreset;
 };
 
 var shouldStartHeating = function(millis, temp_preset, temp_living, temp_osijek) {
-  console.log("config-tools.shouldStartHeating()", temp_preset, temp_living, temp_osijek);
+  logger.info("config-tools.shouldStartHeating()", temp_preset, temp_living, temp_osijek);
 
   if (millis === undefined) {
     millis = new Date().getTime();
   }
 
   var now = new Date(millis);
-  // console.log('  now=', now);
+  // logger.debug('  now=', now);
 
   var should = false;
   if (temp_preset > temp_living) {
-    console.log('  heating needed now');
+    logger.debug('  heating needed now');
     should = true;
   } else {
     // we're above preset temp, but next preset could require heating --> check it
     var target = getNextTimeTable(now);
-    console.log('  target=', target);
+    logger.debug('  target=', target);
 
     if (target.temp > temp_living && target.temp > temp_preset) {
       // see how much we should heat
       var tempDiffToReach = parseFloat((target.temp - temp_living).toFixed(2));
-      console.log('  tempDiffToReach=', tempDiffToReach);
+      logger.debug('  tempDiffToReach=', tempDiffToReach);
 
       var delta = parseFloat((target.temp - temp_osijek).toFixed(2));
-      console.log('  delta=', delta);
+      logger.debug('  delta=', delta);
 
       var Cph = 3 - (0.1 * delta);
-      console.log('  Cph=', Cph);
+      logger.debug('  Cph=', Cph);
       if (Cph < 0.5) {
         Cph = 0.5;
-        console.log('  Cph (corrected)=', Cph);
+        logger.debug('  Cph (corrected)=', Cph);
       }      
 
       // see how long to reach that temp
       var timeToReachTempDiff = parseFloat((tempDiffToReach / Cph).toFixed(2));
-      console.log('  timeToReachTempDiff=', timeToReachTempDiff, 'hours');
+      logger.debug('  timeToReachTempDiff=', timeToReachTempDiff, 'hours');
 
       var hourMillis = 60 * 60 * 1000;
       var timeToReachTempDiffMillis = Math.round(timeToReachTempDiff * hourMillis);
-      console.log('  timeToReachTempDiffMillis=', timeToReachTempDiffMillis);
+      logger.debug('  timeToReachTempDiffMillis=', timeToReachTempDiffMillis);
 
       var target_hour = target.from[0];
       var target_minute = target.from[1];
       // is target is tomorrow, add 1 day
       var target_date = new Date(now.getFullYear(), now.getMonth(), target_hour < now.getHours() ? now.getDate() + 1 : now.getDate(), target_hour, target_minute, 0, 0);
-      console.log('  target_date=', target_date);
-      console.log('  target_date_millis=', target_date.getTime());
+      logger.debug('  target_date=', target_date);
+      logger.debug('  target_date_millis=', target_date.getTime());
       var shouldStartAt = target_date.getTime() - timeToReachTempDiffMillis;
-      console.log('  shouldStartAt_millis=', shouldStartAt);
-      console.log('  shouldStartAt=', new Date(shouldStartAt));
-      console.log('  now=', now.getTime());
+      logger.debug('  shouldStartAt_millis=', shouldStartAt);
+      logger.debug('  shouldStartAt=', new Date(shouldStartAt));
+      logger.debug('  now=', now.getTime());
 
       if (shouldStartAt < now.getTime()) {
-        console.log('  heating needed now to reach goal (' + tempDiffToReach + ' C) in ' + timeToReachTempDiff + ' h');
+        logger.info('  heating needed now to reach goal (' + tempDiffToReach + ' C) in ' + timeToReachTempDiff + ' h');
         should = true;
       }
     }
   }
 
-  console.log('  shouldStartHeating=', should);
+  logger.info('  shouldStartHeating=', should);
   return should;
 };
 
+exports.logger = logger;
 exports.root_dir = root_dir; // read-only var
 exports.app_dir = app_dir; // read-only var
 exports.public_dir = public_dir; // read-only var

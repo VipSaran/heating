@@ -1,12 +1,13 @@
 var fs = require('fs');
 var bcrypt = require('bcrypt-nodejs');
 var config = require('./config-tools');
+var logger = config.logger;
 
 var cached_users = [];
 
 var verifyPassword = function(users, name, pass, cb) {
   for (var i = users.length - 1; i >= 0; i--) {
-    // console.log("user-tools.verifyPassword(), users[" + i + "].username=", users[i].username);
+    // logger.debug("user-tools.verifyPassword(), users[" + i + "].username=", users[i].username);
     var user = null;
     if (users[i].username === name) {
       user = users[i];
@@ -16,9 +17,9 @@ var verifyPassword = function(users, name, pass, cb) {
   }
 
   if (user) {
-    // console.log('bcrypt.compare() start');
+    // logger.debug('bcrypt.compare() start');
     bcrypt.compare(pass, users[i].password, function(err, valid) {
-      // console.log('bcrypt.compare() end');
+      // logger.debug('bcrypt.compare() end');
       if (typeof(cb) == "function") {
         cb(valid);
       }
@@ -31,10 +32,10 @@ var verifyPassword = function(users, name, pass, cb) {
 };
 
 var checkCredentials = function(name, pass, cb) {
-  // console.log("user-tools.checkCredentials()", name, pass);
+  // logger.debug("user-tools.checkCredentials()", name, pass);
 
   if (cached_users.length > 0) {
-    // console.log("user-tools.checkCredentials(), cached");
+    logger.debug("user-tools.checkCredentials(), cached");
     verifyPassword(cached_users, name, pass, cb);
   } else {
     readAuth(function(users) {
@@ -44,12 +45,12 @@ var checkCredentials = function(name, pass, cb) {
 };
 
 var readAuth = function(cb) {
-  console.log("user-tools.readAuth()");
+  logger.info("user-tools.readAuth()");
 
   fs.readFile(config.app_dir + '/.auth', 'utf8', function(err, data_json) {
     var users;
     if (err) {
-      console.error(err);
+      logger.error(err);
       users = [];
     } else {
       try {
@@ -58,19 +59,19 @@ var readAuth = function(cb) {
           throw new TypeError("'.auth' JSON must be an array.");
         }
       } catch (ex) {
-        console.error(ex);
+        logger.error(ex);
         // invalid JSON --> reset it
         users = [];
       }
     }
-    // console.log('users=', users);
+    // logger.debug('users=', users);
 
     cb(users);
   });
 };
 
 var createUser = function(name, pass, cb) {
-  // console.log("user-tools.createUser()", name, pass);
+  // logger.debug("user-tools.createUser()", name, pass);
 
   bcrypt.genSalt(4, function(err, salt) {
     bcrypt.hash(pass, salt, null, function(err, hash) {
@@ -82,7 +83,7 @@ var createUser = function(name, pass, cb) {
 
         var existing = false;
         for (var i = users.length - 1; i >= 0; i--) {
-          console.log("  users[" + i + "].username=", users[i].username);
+          logger.debug("  users[" + i + "].username=", users[i].username);
           if (users[i].username === newUser.username) {
             existing = true;
             users[i] = newUser;
@@ -97,12 +98,12 @@ var createUser = function(name, pass, cb) {
 
         fs.writeFile(config.app_dir + '/.auth', JSON.stringify(users), function(err) {
           if (err) {
-            console.error(err);
+            logger.error(err);
             if (typeof(cb) == "function") {
               cb(false);
             }
           } else {
-            console.log("  user '" + newUser.username + "' successfully " + existing ? "updated" : "created");
+            logger.info("  user '" + newUser.username + "' successfully " + existing ? "updated" : "created");
 
             // reset cached users
             cached_users = users;

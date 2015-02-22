@@ -3,6 +3,7 @@ var favicon = require('serve-favicon');
 var basicAuth = require('basic-auth');
 var ifaces = require('os').networkInterfaces();
 var config = require('./config-tools');
+var logger = config.logger;
 var user_tools = require('./user-tools');
 var gpio_tools = require('./gpio-tools');
 var rrdb_tools = require('./rrdb-tools');
@@ -10,29 +11,6 @@ var weather_tools = require('./weather-tools');
 var cloud_tools = require('./cloud-tools');
 
 var app = express();
-
-console.logCopy = console.log.bind(console);
-console.log = function() {
-  // var currentTime = '[' + new Date().toISOString().slice(11, -5) + '] ';
-  var currentTime = '[' + new Date().toString().split(" ")[4] + '] ';
-  for (var i = 0; i < arguments.length; i++) {
-    if (typeof arguments[i] === 'object') {
-      arguments[i] = JSON.stringify(arguments[i], null, 2);
-    }
-  }
-  this.logCopy(currentTime.concat(Array.prototype.slice.call(arguments)));
-};
-console.errorCopy = console.error.bind(console);
-console.error = function() {
-  // var currentTime = '[' + new Date().toISOString().slice(11, -5) + '] ';
-  var currentTime = '[' + new Date().toString().split(" ")[4] + '] ';
-  for (var i = 0; i < arguments.length; i++) {
-    if (typeof arguments[i] === 'object') {
-      arguments[i] = JSON.stringify(arguments[i], null, 2);
-    }
-  }
-  this.errorCopy(currentTime.concat(Array.prototype.slice.call(arguments)));
-};
 
 var last_temp_preset = 0;
 var last_temp_living = 0;
@@ -66,13 +44,13 @@ var auth = function(req, res, next) {
       return cb(false);
     }
 
-    console.log('isFromLAN()', ip);
+    logger.info('isFromLAN()', ip);
     try {
       var lastDot = ip.lastIndexOf('.');
       var first3Octets = ip.substring(0, lastDot);
-      // console.log('first3Octets=', first3Octets);
+      // logger.debug('first3Octets=', first3Octets);
     } catch (e) {
-      console.error('error: ' + e);
+      logger.error(e);
     }
 
     var ifkeys = Object.keys(ifaces);
@@ -85,14 +63,14 @@ var auth = function(req, res, next) {
         }
 
         if (iface.internal === true && iface.address === ip) {
-          // console.log('internal');
+          // logger.debug('internal');
           return cb(true);
         }
 
         ifFirst3Oct = iface.address.substring(0, iface.address.lastIndexOf('.'));
-        // console.log('ifFirst3Oct:', ifFirst3Oct);
+        // logger.debug('ifFirst3Oct:', ifFirst3Oct);
         if (ifFirst3Oct === first3Octets) {
-          // console.log('ifFirst3Oct === first3Octets');
+          // logger.debug('ifFirst3Oct === first3Octets');
           return cb(true);
         }
       }
@@ -103,13 +81,13 @@ var auth = function(req, res, next) {
 
   isFromLAN(req.ip, function(fromLAN) {
     if (fromLAN) {
-      // console.log('LAN --> no auth needed');
+      // logger.debug('LAN --> no auth needed');
       next();
     } else {
-      // console.log(req.ip + ' --> WAN --> auth to pass');
+      // logger.debug(req.ip + ' --> WAN --> auth to pass');
 
       function unauthorized(res) {
-        console.log('unauthorized --> 401');
+        logger.info('unauthorized --> 401');
         res.set('WWW-Authenticate', 'Basic realm=Authorization Required');
         return res.sendStatus(401);
       }
@@ -117,12 +95,12 @@ var auth = function(req, res, next) {
       var user = basicAuth(req);
 
       if (!user || !user.name || !user.pass) {
-        console.log('!user');
+        logger.debug('!user');
         return unauthorized(res);
       }
 
       user_tools.checkCredentials(user.name, user.pass, function(valid) {
-        console.log('valid:', valid);
+        logger.debug('valid:', valid);
         if (valid) {
           next();
         } else {
@@ -149,13 +127,13 @@ function getState() {
 
 // routes
 app.get('/get_state', function(req, res) {
-  console.log('/get_state');
+  logger.info('/get_state');
 
   res.json(getState());
 });
 
 app.get('/switch_override/:value', auth, function(req, res) {
-  console.log('/switch_override/:', req.params.value);
+  logger.info('/switch_override/:', req.params.value);
 
   config.overrideSwitch = ((req.params.value * 1) == 1);
 
@@ -167,7 +145,7 @@ app.get('/switch_override/:value', auth, function(req, res) {
 });
 
 app.get('/switch_heating/:value', auth, function(req, res) {
-  console.log('/switch_heating/:', req.params.value);
+  logger.info('/switch_heating/:', req.params.value);
 
   config.heatingSwitch = ((req.params.value * 1) == 1);
 
@@ -177,7 +155,7 @@ app.get('/switch_heating/:value', auth, function(req, res) {
 });
 
 app.get('/switch_holiday/:value', auth, function(req, res) {
-  console.log('/switch_holiday/:', req.params.value);
+  logger.info('/switch_holiday/:', req.params.value);
 
   config.holidaySwitch = ((req.params.value * 1) == 1);
 
@@ -187,7 +165,7 @@ app.get('/switch_holiday/:value', auth, function(req, res) {
 });
 
 app.get('/set_preset_temp/:value', auth, function(req, res) {
-  console.log('/set_preset_temp/:', req.params.value);
+  logger.info('/set_preset_temp/:', req.params.value);
 
   config.overrideSwitch = true;
 
@@ -208,7 +186,7 @@ app.get('/set_preset_temp/:value', auth, function(req, res) {
 });
 
 app.get('/refresh_image', function(req, res) {
-  console.log('/refresh_image');
+  logger.info('/refresh_image');
   rrdb_tools.paintTemps(function(updated) {
     res.send(updated);
   });
@@ -233,10 +211,10 @@ app.use(function(err, req, res, next) {
 });
 
 app.listen(3000);
-console.log('App Server running at port 3000');
+logger.info('App Server running at port 3000');
 
 process.on('SIGINT', function() {
-  console.log('About to exit.');
+  logger.info('About to exit.');
 
   clearInterval(tempRegulateInterval);
   clearInterval(tempCollectInterval);
@@ -252,7 +230,7 @@ var tempRegulateInterval;
 var tempCollectInterval;
 
 function initTimers() {
-  console.log('initTimers()');
+  logger.info('initTimers()');
 
   tempRegulateInterval = setInterval(function() {
     collectAndRegulateTemp();
@@ -264,7 +242,7 @@ function initTimers() {
 }
 
 function collectAndRegulateTemp() {
-  console.log('collectAndRegulateTemp()');
+  logger.info('collectAndRegulateTemp()');
   var ts = Math.round(new Date().getTime() / 1000);
 
   gpio_tools.getTempLiving(last_temp_living, function(value) {
@@ -286,7 +264,7 @@ function collectAndRegulateTemp() {
 }
 
 function collectAndRecordCurrTemps() {
-  console.log('collectAndRecordCurrTemps()');
+  logger.info('collectAndRecordCurrTemps()');
   var ts = Math.round(new Date().getTime() / 1000);
 
   weather_tools.getTemp(function(value, error) {
@@ -294,8 +272,8 @@ function collectAndRecordCurrTemps() {
       last_temp_osijek = value;
     }
 
-    console.log('  temp_living=', last_temp_living);
-    console.log('  temp_osijek=', last_temp_osijek);
+    logger.debug('  temp_living=', last_temp_living);
+    logger.debug('  temp_osijek=', last_temp_osijek);
 
     rrdb_tools.insertTemps(ts, last_temp_preset, last_temp_living, last_temp_osijek);
 

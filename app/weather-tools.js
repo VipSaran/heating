@@ -4,6 +4,8 @@ var options = {
   APIKey: "<ENTER_KEY_HERE>"
 };
 var forecast = new Forecast(options);
+var config = require('./config-tools');
+var logger = config.logger;
 
 var latitude = 45.5539;
 var longitude = 18.6657;
@@ -13,19 +15,19 @@ var options = {
 };
 
 var getTemp = function(cb) {
-  console.log('weather-tools.getTemp()');
+  logger.info('weather-tools.getTemp()');
 
   forecast.get(latitude, longitude, options, function(err, res, data) {
     if (err) {
-      console.error(err);
+      logger.error(err);
 
       if (typeof(cb) == "function") {
         cb(0, err);
       }
     } else {
       try {
-        // console.log('  res:', util.inspect(res));
-        // console.log('  data:', util.inspect(data));
+        // logger.debug('  res:', util.inspect(res));
+        // logger.debug('  data:', util.inspect(data));
 
         // var tempF = data.currently.temperature;
         // var roundTempF = tempF.toFixed(1);
@@ -33,8 +35,8 @@ var getTemp = function(cb) {
         var tempC = ((data.currently.temperature - 32) * 5 / 9);
         var roundTempC = parseFloat(tempC.toFixed(1));
 
-        // console.log('  temp (F):', roundTempF, tempF);
-        // console.log('  temp (C):', roundTempC, tempC);
+        // logger.debug('  temp (F):', roundTempF, tempF);
+        // logger.debug('  temp (C):', roundTempC, tempC);
 
         if (typeof(cb) == "function") {
           cb(roundTempC);
