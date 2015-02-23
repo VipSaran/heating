@@ -1,19 +1,23 @@
-**Table of Contents**  *generated with [DocToc](http://doctoc.herokuapp.com/)*
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
-- [Heating](#)
-  - [Dependencies](#)
-    - [Node.js](#)
-      - [Installation](#)
-        - [Variant 1)](#)
-        - [Variant 2)](#)
-    - [Node.js modules](#)
-    - [1-Wire & OWFS](#)
-    - [RRDtool](#)
-  - [Initial Configuration](#)
-  - [Running](#)
-    - [Manual](#)
-    - [Automatic](#)
-  - [License](#)
+- [Heating](#heating)
+  - [Dependencies](#dependencies)
+    - [Node.js](#nodejs)
+      - [Installation](#installation)
+        - [Variant 1)](#variant-1)
+        - [Variant 2)](#variant-2)
+    - [Node.js modules](#nodejs-modules)
+    - [1-Wire & OWFS](#1-wire-&-owfs)
+    - [RRDtool](#rrdtool)
+  - [Initial Configuration](#initial-configuration)
+  - [Running](#running)
+    - [Manual](#manual)
+    - [Automatic](#automatic)
+  - [License](#license)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 # Heating
 
