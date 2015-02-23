@@ -1,3 +1,20 @@
+**Table of Contents**  *generated with [DocToc](http://doctoc.herokuapp.com/)*
+
+- [Heating](#)
+  - [Dependencies](#)
+    - [Node.js](#)
+      - [Installation](#)
+        - [Variant 1)](#)
+        - [Variant 2)](#)
+    - [Node.js modules](#)
+    - [1-Wire & OWFS](#)
+    - [RRDtool](#)
+  - [Initial Configuration](#)
+  - [Running](#)
+    - [Manual](#)
+    - [Automatic](#)
+  - [License](#)
+
 # Heating
 
 A personal effort for improving living standard through home heating automation :)
