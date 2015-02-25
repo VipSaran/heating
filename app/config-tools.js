@@ -1,8 +1,16 @@
 var fs = require('fs');
 var path = require('path');
-var logger = require('winston');
-logger.remove(logger.transports.Console);
-logger.add(logger.transports.Console, {'timestamp': true, 'showLevel': false, 'level': 'debug'});
+var winston = require('winston');
+var consoleTransport = new(winston.transports.Console)();
+consoleTransport.timestamp = true;
+consoleTransport.showLevel = false;
+consoleTransport.level = 'debug';
+consoleTransport.debugStdout = true;
+var logger = new(winston.Logger)({
+  transports: [
+    consoleTransport
+  ]
+});
 
 var config_file_name = 'config.json';
 var timetable_file_name = 'timetable.json';
@@ -302,7 +310,7 @@ var shouldStartHeating = function(millis, temp_preset, temp_living, temp_osijek)
       if (Cph < 0.5) {
         Cph = 0.5;
         logger.debug('  Cph (corrected)=', Cph);
-      }      
+      }
 
       // see how long to reach that temp
       var timeToReachTempDiff = parseFloat((tempDiffToReach / Cph).toFixed(2));
