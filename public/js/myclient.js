@@ -15,14 +15,13 @@ var getImage = function(cb) {
     success: function(data, textStatus, jqXHR) {
       console.log('/refresh_image API response received:', data);
       if (data) {
-        $("#graph_day").html($("<img />", {
-          src: "/img/temperatures_graph.png",
-          title: "dnevni pogled"
-        }));
-        $("#graph_hour").html($("<img />", {
-          src: "/img/temperatures_graph_hour.png",
-          title: "pogled kroz jedan sat"
-        }));
+        var d = new Date();
+        var img_day = $('#graph_day > img')
+        img_day.attr('src', img_day.attr('src') + '?' + d.getMilliseconds());
+
+        var img_hour = $('#graph_hour > img')
+        img_hour.attr('src', img_hour.attr('src') + '?' + d.getMilliseconds());
+
         lastRefreshed = new Date().toLocaleString();
       }
     },
