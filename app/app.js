@@ -248,19 +248,23 @@ function collectAndRegulateTemp() {
   gpio_tools.getTempLiving(last_temp_living, function(value) {
     last_temp_living = value;
 
-    if (!config.overrideSwitch) {
-      last_temp_preset = config.getTimeTableTemp();
+    if (config.heatingSwitch) {
+      if (!config.overrideSwitch) {
+        last_temp_preset = config.getTimeTableTemp();
+      }
+
+      // regulate on/off
+      gpio_tools.regulateHeating(
+        config.shouldStartHeating(undefined, last_temp_preset, last_temp_living, last_temp_osijek)
+      );
     }
-
-    // regulate on/off
-    gpio_tools.regulateHeating(
-      config.shouldStartHeating(undefined, last_temp_preset, last_temp_living, last_temp_osijek)
-    );
   });
 
-  gpio_tools.getHeaterState(function(state) {
-    rrdb_tools.insertState(ts, state ? 1 : 0);
-  });
+  if (config.heatingSwitch) {
+    gpio_tools.getHeaterState(function(state) {
+      rrdb_tools.insertState(ts, state ? 1 : 0);
+    });
+  }
 }
 
 function collectAndRecordCurrTemps() {
