@@ -1,9 +1,9 @@
 {
   "name": "heating",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "Robert Saric <robert.saric@gmail.com>",
   "scripts": {
-    "start": "node app/app.js"
+    "start": "NODE_ENV=development node app/app.js"
   },
   "dependencies": {
     "async": "^0.9.0",

@@ -4,8 +4,13 @@ var winston = require('winston');
 var consoleTransport = new(winston.transports.Console)();
 consoleTransport.timestamp = true;
 consoleTransport.showLevel = false;
-consoleTransport.level = 'debug';
-consoleTransport.debugStdout = true;
+var env = process.env.NODE_ENV || 'production'; 
+if ('development' == env) {
+  consoleTransport.level = 'debug';
+  consoleTransport.debugStdout = true;
+} else {
+  consoleTransport.level = 'error';
+}
 var logger = new(winston.Logger)({
   transports: [
     consoleTransport
@@ -358,3 +363,4 @@ exports.init = init;
 exports.writeConfig = writeConfig;
 exports.getTimeTableTemp = getTimeTableTemp;
 exports.shouldStartHeating = shouldStartHeating;
+exports.env = env;

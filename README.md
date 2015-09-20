@@ -15,6 +15,7 @@
   - [Running](#running)
     - [Manual](#manual)
     - [Automatic](#automatic)
+  - [Debugging](#debugging)
   - [License](#license)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -103,6 +104,10 @@ Running the application manually (with `npm start`) is possibly convenient when 
         sudo update-rc.d heating defaults
 
   3. after that, start the service with: `sudo /etc/init.d/heating start`.
+
+## Debugging
+
+When started with forever/service, the app defaults to `process.env.NODE_ENV='production'` which displays only "error"-level logs. For printing out more logs, it's necessary to run the app with `NODE_ENV=development node app/app.js` or to simply start it with `npm start`.
 
 ## License
 
