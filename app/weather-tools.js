@@ -3,6 +3,7 @@ var YQL = require('yql');
 var config = require('./config-tools');
 var logger = config.logger;
 
+// var city_woeid = 15022267; // Osijek, HR
 var city_woeid = 849471; // Esseg, HR
 var query = new YQL('select item.condition from weather.forecast where woeid = ' + city_woeid + ' and u="c"');
 

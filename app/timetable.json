@@ -1,15 +1,15 @@
 {
   "workday": [{
     "name": "morning",
-    "from": [7, 0],
+    "from": [6, 30],
     "temp": 20
   }, {
     "name": "forenoon",
-    "from": [8, 0],
+    "from": [7, 50],
     "temp": 18
   }, {
     "name": "afternoon",
-    "from": [15, 45],
+    "from": [15, 0],
     "temp": 21
   }, {
     "name": "evening",

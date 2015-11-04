@@ -1,12 +1,14 @@
 var fs = require('fs');
+var _ = require('lodash');
 var path = require('path');
 var winston = require('winston');
 var consoleTransport = new(winston.transports.Console)();
 consoleTransport.timestamp = true;
 consoleTransport.showLevel = false;
-var env = process.env.NODE_ENV || 'production'; 
-if ('development' == env) {
+var env = process.env.NODE_ENV || 'production';
+if ('development' == env.trim()) {
   consoleTransport.level = 'debug';
+  consoleTransport.colorize = true;
   consoleTransport.debugStdout = true;
 } else {
   consoleTransport.level = 'error';
@@ -37,8 +39,12 @@ var delay_pump_off = 300000; // 300.000 = 5 min
 
 var timeTableData;
 var overrideSwitch;
+var skipCurrentSwitch;
 var heatingSwitch;
 var holidaySwitch;
+
+var skippedPreset;
+var nextPreset;
 
 (function() {
   var days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -70,12 +76,14 @@ var readConfig = function(cb) {
     if (err) {
       logger.error(err);
       overrideSwitch = false;
+      skipCurrentSwitch = false;
       heatingSwitch = true;
       holidaySwitch = false;
     } else {
       var data = JSON.parse(data_json);
       logger.debug('  config=', data);
       overrideSwitch = data.overrideSwitch;
+      skipCurrentSwitch = data.skipCurrentSwitch;
       heatingSwitch = data.heatingSwitch;
       holidaySwitch = data.holidaySwitch;
     }
@@ -91,52 +99,21 @@ var writeConfig = function(cb) {
 
   var config = {
     "overrideSwitch": overrideSwitch,
+    "skipCurrentSwitch": skipCurrentSwitch,
     "heatingSwitch": heatingSwitch,
     "holidaySwitch": holidaySwitch
   };
 
-  fs.writeFile(app_dir + '/' + config_file_name, JSON.stringify(config), function(err) {
-    if (err) {
-      logger.error(err);
-    } else {
-      logger.debug('  config.json written');
-    }
-    if (typeof(cb) == "function") {
-      cb();
-    }
-  });
+  try {
+    fs.writeFileSync(app_dir + '/' + config_file_name, JSON.stringify(config));
+    logger.debug('  config.json written');
+  } catch (err) {
+    logger.error(err);
+  }
+  if (typeof(cb) == "function") {
+    cb();
+  }
 };
-
-Object.defineProperty(exports, "overrideSwitch", {
-  get: function() {
-    return overrideSwitch;
-  },
-  set: function(value) {
-    overrideSwitch = value;
-    writeConfig();
-  }
-});
-
-Object.defineProperty(exports, "heatingSwitch", {
-  get: function() {
-    return heatingSwitch;
-  },
-  set: function(value) {
-    heatingSwitch = value;
-    writeConfig();
-  }
-});
-
-Object.defineProperty(exports, "holidaySwitch", {
-  get: function() {
-    return holidaySwitch;
-  },
-  set: function(value) {
-    holidaySwitch = value;
-    writeConfig();
-  }
-});
-
 
 var readTimeTable = function(cb) {
   logger.info("config-tools.readTimeTable()");
@@ -156,7 +133,7 @@ var readTimeTable = function(cb) {
       }
 
       if (typeof(cb) == "function") {
-        cb();
+        cb(timeTableData);
       }
     });
   }
@@ -170,29 +147,24 @@ var getTimeTableTemp = function(millis) {
   }
 
   var now = new Date(millis);
-  // logger.debug('  now=', now);
-  var presets;
-
-  if (!holidaySwitch && now.isWorkday()) {
-    presets = timeTableData.workday;
-  } else {
-    presets = timeTableData.weekend;
-  }
+  var presets = getPresets(now);
 
   var currHour = now.getHours();
-  // logger.debug('  currHour=', currHour);
+  logger.debug('  currHour=', currHour);
   var currMinute = now.getMinutes();
-  // logger.debug('  currMinute=', currMinute);
+  logger.debug('  currMinute=', currMinute);
+  logger.debug('  currDay=', now.getDayName());
 
   var matchingPreset;
+  var wasYesterday = false;
   for (var i = presets.length - 1; i >= 0; i--) {
-    // logger.debug('  presets[' + i + ']=', presets[i]);
+    logger.debug('  presets[' + i + ']=', presets[i]);
     var presetHour = presets[i].from[0];
     var presetMinute = presets[i].from[1];
     if (presetHour > currHour) {
-      // logger.debug('  1 future --> continue search');
+      logger.debug('  1 future --> continue search');
     } else if (presetHour == currHour && presetMinute > currMinute) {
-      // logger.debug('  2 future --> continue search');
+      logger.debug('  2 future --> continue search');
     } else {
       if (i != presets.length) {
         matchingPreset = presets[i];
@@ -204,19 +176,56 @@ var getTimeTableTemp = function(millis) {
 
     if (i == 0) {
       // time < first preset today = time > last preset yesterday
-      // logger.debug('  continuation of "night" from previous day');
+      logger.debug('  continuation of "night" from previous day');
       var yesterday = new Date(now.getTime() - (24 * 60 * 60 * 1000));
-      // logger.debug('  yesterday=', yesterday);
-      if (!holidaySwitch && yesterday.isWorkday()) {
-        presets = timeTableData.workday;
-      } else {
-        presets = timeTableData.weekend;
-      }
-
-      matchingPreset = presets[presets.length - 1];
+      var yesterday_presets = getPresets(yesterday);
+      matchingPreset = yesterday_presets[yesterday_presets.length - 1];
+      wasYesterday = true;
     }
   }
-  // logger.debug('  matchingPreset=', matchingPreset);
+  logger.debug('  matchingPreset=', matchingPreset);
+
+  if (skipCurrentSwitch) {
+    logger.debug('  skipCurrentSwitch=true --> skippedPreset=', skippedPreset);
+    if (skippedPreset == undefined) { // don't check type
+      logger.debug('  skippedPreset == undefined');
+
+      skippedPreset = _.extend({}, matchingPreset);
+      logger.debug('  matchingPreset --> skippedPreset=', skippedPreset);
+
+      // skip to next preset and use it as matchingPreset
+      if (wasYesterday) {
+        // the following preset from yesterdays last preset is first one from today
+        nextPreset = presets[0];
+      } else {
+        var currentIndex = _.indexOf(presets, matchingPreset);
+        var nextIndex = currentIndex + 1;
+        if ((nextIndex + 1) > presets.length) {
+          // overflow to next day
+          var tomorrow = new Date(now.getTime() + (24 * 60 * 60 * 1000));
+          var tomorrow_presets = getPresets(tomorrow);
+          nextPreset = tomorrow_presets[0];
+        } else {
+          nextPreset = presets[nextIndex];
+        }
+      }
+
+      matchingPreset = _.extend({}, nextPreset);
+    } else if (!_.isEqual(matchingPreset, skippedPreset)) {
+      logger.debug('  skippedPreset != matchingPreset');
+      // new preset came in, lift the skip switch
+      exports.skipCurrentSwitch = false;
+      skippedPreset = undefined;
+      logger.debug('  skippedPreset=', skippedPreset);
+      nextPreset = undefined;
+      logger.debug('  nextPreset=', nextPreset);
+    } else {
+      matchingPreset = _.extend({}, nextPreset);
+      logger.debug('  nextPreset --> matchingPreset=', nextPreset);
+    }
+
+    logger.debug('  matchingPreset=', matchingPreset);
+  }
 
   logger.info('  matchingPreset.temp=', matchingPreset.temp);
   return matchingPreset.temp;
@@ -230,19 +239,12 @@ var getNextTimeTable = function(millis) {
   }
 
   var now = new Date(millis);
-  // logger.debug('  now=', now);
-  var presets;
-
-  if (!holidaySwitch && now.isWorkday()) {
-    presets = timeTableData.workday;
-  } else {
-    presets = timeTableData.weekend;
-  }
+  var presets = getPresets(now);
 
   var currHour = now.getHours();
-  // logger.debug('  currHour=', currHour);
+  logger.debug('  currHour=', currHour);
   var currMinute = now.getMinutes();
-  // logger.debug('  currMinute=', currMinute);
+  logger.debug('  currMinute=', currMinute);
 
   var futurePreset;
   for (var i = presets.length - 1; i >= 0; i--) {
@@ -265,23 +267,28 @@ var getNextTimeTable = function(millis) {
       // time > last preset today = time < first preset tomorrow
       logger.debug('  target is "morning" of next day');
       var tomorrow = new Date(now.getTime() + (24 * 60 * 60 * 1000));
-      logger.debug('  tomorrow=', tomorrow);
-      if (!holidaySwitch && tomorrow.isWorkday()) {
-        presets = timeTableData.workday;
-      } else {
-        presets = timeTableData.weekend;
-      }
-
-      futurePreset = presets[0];
+      var tomorrow_presets = getPresets(tomorrow);
+      futurePreset = tomorrow_presets[0];
     }
   }
-  // logger.debug('  futurePreset=', futurePreset);
-
-  // logger.debug('  futurePreset.temp=', futurePreset.temp);
 
   // logger.debug('## elapsed:', new Date().getTime() - now.getTime());
+  // logger.debug('  futurePreset=', futurePreset);
   return futurePreset;
 };
+
+function getPresets(now) {
+  logger.info('config-tools.getPresets() for', now.toLocaleString());
+
+  if (!holidaySwitch && now.isWorkday()) {
+    presets = timeTableData.workday;
+  } else {
+    presets = timeTableData.weekend;
+  }
+
+  logger.debug('presets=', presets);
+  return presets;
+}
 
 var shouldStartHeating = function(millis, temp_preset, temp_living, temp_osijek) {
   logger.info("config-tools.shouldStartHeating()", temp_preset, temp_living, temp_osijek);
@@ -291,7 +298,7 @@ var shouldStartHeating = function(millis, temp_preset, temp_living, temp_osijek)
   }
 
   var now = new Date(millis);
-  // logger.debug('  now=', now);
+  logger.debug('  now=', now.toLocaleString());
 
   var should = false;
   if (temp_preset > temp_living) {
@@ -347,20 +354,174 @@ var shouldStartHeating = function(millis, temp_preset, temp_living, temp_osijek)
   return should;
 };
 
-exports.logger = logger;
-exports.root_dir = root_dir; // read-only var
-exports.app_dir = app_dir; // read-only var
-exports.public_dir = public_dir; // read-only var
-exports.img_dir = img_dir; // read-only var
-exports.scrobble_data_online = scrobble_data_online; // read-only var
-exports.allow_unauthenticated_lan = allow_unauthenticated_lan; // read-only var
-exports.rrd_temps_name = rrd_temps_name; // read-only var
-exports.rrd_state_name = rrd_state_name; // read-only var
-exports.regulate_interval = regulate_interval; // read-only var
-exports.collect_record_interval = collect_record_interval; // read-only var
-exports.delay_pump_off = delay_pump_off; // read-only var
+
+// variables exported as functions
 exports.init = init;
 exports.writeConfig = writeConfig;
 exports.getTimeTableTemp = getTimeTableTemp;
 exports.shouldStartHeating = shouldStartHeating;
-exports.env = env;
+exports.testHookResetSkip = function() {
+  skippedPreset = undefined;
+  nextPreset = undefined;
+};
+
+
+// variables exported as read-write
+Object.defineProperty(exports, "overrideSwitch", {
+  get: function() {
+    return overrideSwitch;
+  },
+  set: function(value) {
+    overrideSwitch = value;
+    writeConfig();
+  }
+});
+
+Object.defineProperty(exports, "skipCurrentSwitch", {
+  get: function() {
+    return skipCurrentSwitch;
+  },
+  set: function(value) {
+    skipCurrentSwitch = value;
+    writeConfig();
+  }
+});
+
+Object.defineProperty(exports, "heatingSwitch", {
+  get: function() {
+    return heatingSwitch;
+  },
+  set: function(value) {
+    heatingSwitch = value;
+    writeConfig();
+  }
+});
+
+Object.defineProperty(exports, "holidaySwitch", {
+  get: function() {
+    return holidaySwitch;
+  },
+  set: function(value) {
+    holidaySwitch = value;
+    writeConfig();
+  }
+});
+
+
+// variables exported as read-only
+Object.defineProperty(exports, "logger", {
+  get: function() {
+    return logger;
+  },
+  set: function(value) {
+    logger.warn('Attempt to change read-only variable: "config.logger"!');
+  }
+});
+
+Object.defineProperty(exports, "root_dir", {
+  get: function() {
+    return root_dir;
+  },
+  set: function(value) {
+    logger.warn('Attempt to change read-only variable: "config.root_dir"!');
+  }
+});
+
+Object.defineProperty(exports, "app_dir", {
+  get: function() {
+    return app_dir;
+  },
+  set: function(value) {
+    logger.warn('Attempt to change read-only variable: "config.app_dir"!');
+  }
+});
+
+Object.defineProperty(exports, "public_dir", {
+  get: function() {
+    return public_dir;
+  },
+  set: function(value) {
+    logger.warn('Attempt to change read-only variable: "config.public_dir"!');
+  }
+});
+
+Object.defineProperty(exports, "img_dir", {
+  get: function() {
+    return img_dir;
+  },
+  set: function(value) {
+    logger.warn('Attempt to change read-only variable: "config.img_dir"!');
+  }
+});
+
+Object.defineProperty(exports, "allow_unauthenticated_lan", {
+  get: function() {
+    return allow_unauthenticated_lan;
+  },
+  set: function(value) {
+    logger.warn('Attempt to change read-only variable: "config.allow_unauthenticated_lan"!');
+  }
+});
+
+Object.defineProperty(exports, "rrd_temps_name", {
+  get: function() {
+    return rrd_temps_name;
+  },
+  set: function(value) {
+    logger.warn('Attempt to change read-only variable: "config.rrd_temps_name"!');
+  }
+});
+
+Object.defineProperty(exports, "rrd_state_name", {
+  get: function() {
+    return rrd_state_name;
+  },
+  set: function(value) {
+    logger.warn('Attempt to change read-only variable: "config.rrd_state_name"!');
+  }
+});
+
+Object.defineProperty(exports, "regulate_interval", {
+  get: function() {
+    return regulate_interval;
+  },
+  set: function(value) {
+    logger.warn('Attempt to change read-only variable: "config.regulate_interval"!');
+  }
+});
+
+Object.defineProperty(exports, "scrobble_data_online", {
+  get: function() {
+    return scrobble_data_online;
+  },
+  set: function(value) {
+    logger.warn('Attempt to change read-only variable: "config.scrobble_data_online"!');
+  }
+});
+
+Object.defineProperty(exports, "collect_record_interval", {
+  get: function() {
+    return collect_record_interval;
+  },
+  set: function(value) {
+    logger.warn('Attempt to change read-only variable: "config.collect_record_interval"!');
+  }
+});
+
+Object.defineProperty(exports, "delay_pump_off", {
+  get: function() {
+    return delay_pump_off;
+  },
+  set: function(value) {
+    logger.warn('Attempt to change read-only variable: "config.delay_pump_off"!');
+  }
+});
+
+Object.defineProperty(exports, "env", {
+  get: function() {
+    return env;
+  },
+  set: function(value) {
+    logger.warn('Attempt to change read-only variable: "config.env"!');
+  }
+});

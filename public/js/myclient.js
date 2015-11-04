@@ -136,6 +136,32 @@ var switchOverride = function() {
   });
 };
 
+var switchSkipCurrent = function() {
+  var state = getSkipCurrentSwitchBinaryState();
+  var url = document.URL + 'switch_skip_current/' + state;
+  console.log('URL=', url);
+  $.ajax({
+    url: url,
+    dataType: "json",
+    success: function(data, textStatus, jqXHR) {
+      console.log('/switch_skip_current API response received:', data);
+
+      refreshValues(data);
+    },
+    error: function(jqXHR, textStatus, errorThrown) {
+      console.error(textStatus, errorThrown);
+      // console.error(jqXHR.statusText);
+      if (textStatus === "timeout") {
+        clearTimeout(dataRefreshTimeout);
+        $('#error_text').html('Pre dugo je vremena proteklo bez odgovora servera. Automatsko osvježavanje isključeno.');
+      } else {
+        $('#error_text').html('Za odabranu funkciju potrebno je odobrenje.');
+      }
+      $('#error').removeClass('hidden').addClass('in');
+    }
+  });
+};
+
 var switchHeating = function() {
   var state = getHeatingSwitchBinaryState();
   var url = document.URL + 'switch_heating/' + state;
@@ -194,6 +220,7 @@ function refreshValues(data) {
   $("#temp_living").html(data.temp_living);
 
   $("input#overrideswitch").prop('checked', data.overrideSwitch);
+  $("input#skipcurrentswitch").prop('checked', data.skipCurrentSwitch);
   $("input#myonoffswitch").prop('checked', data.heatingSwitch);
   $("input#holidayswitch").prop('checked', data.holidaySwitch);
 
@@ -214,6 +241,13 @@ var getOverrideSwitchBinaryState = function() {
 }
 var isOverrideSwitchOn = function() {
   return $("input#overrideswitch").is(":checked");
+}
+
+var getSkipCurrentSwitchBinaryState = function() {
+  return isSkipCurrentSwitchOn() ? 1 : 0;
+}
+var isSkipCurrentSwitchOn = function() {
+  return $("input#skipcurrentswitch").is(":checked");
 }
 
 var getHeatingSwitchBinaryState = function() {
@@ -258,6 +292,11 @@ $(document).ready(function() {
   $('#overrideswitch').on("click", function(event) {
     event.preventDefault();
     switchOverride();
+  });
+
+  $('#skipcurrentswitch').on("click", function(event) {
+    event.preventDefault();
+    switchSkipCurrent();
   });
 
   $('#myonoffswitch').on("click", function(event) {

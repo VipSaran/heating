@@ -73,13 +73,13 @@ body {
 .temp_living {
   color: #D62728;
 }
-.overrideswitch, .holidayswitch {
+.overrideswitch, .holidayswitch, .skipcurrentswitch {
   color: #666;
   font-weight: 800;
   font-size: 1em;
   cursor: pointer;
 }
-.holidayswitch {
+.holidayswitch, .skipcurrentswitch {
   font-size: 1.5em;
 }
 

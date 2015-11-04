@@ -28,6 +28,7 @@ config.init(function() {
 
   initTimers();
   rrdb_tools.getLastTemps(function(data) {
+    // TODO holiday?
     if (config.holidaySwitch) {
       last_temp_preset = config.getTimeTableTemp();
     } else {
@@ -117,6 +118,7 @@ function getState() {
     "temp_living": last_temp_living,
     "temp_osijek": last_temp_osijek,
     "overrideSwitch": config.overrideSwitch,
+    "skipCurrentSwitch": config.skipCurrentSwitch,
     "heatingSwitch": config.heatingSwitch,
     "holidaySwitch": config.holidaySwitch,
     "updated": new Date().getTime()
@@ -142,6 +144,19 @@ app.get('/switch_override/:value', auth, function(req, res) {
   }
 
   res.json(getState());
+});
+
+app.get('/switch_skip_current/:value', auth, function(req, res) {
+  logger.info('/switch_skip_current/:', req.params.value);
+
+  config.skipCurrentSwitch = ((req.params.value * 1) == 1);
+
+  last_temp_preset = config.getTimeTableTemp();
+
+  res.json(getState());
+
+  // regulate_interval = 30s --> regulate now
+  collectAndRegulateTemp();
 });
 
 app.get('/switch_heating/:value', auth, function(req, res) {

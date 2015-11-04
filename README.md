@@ -16,6 +16,7 @@
     - [Manual](#manual)
     - [Automatic](#automatic)
   - [Debugging](#debugging)
+  - [Testing](#testing)
   - [License](#license)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -108,6 +109,21 @@ Running the application manually (with `npm start`) is possibly convenient when 
 ## Debugging
 
 When started with forever/service, the app defaults to `process.env.NODE_ENV='production'` which displays only "error"-level logs. For printing out more logs, it's necessary to run the app with `NODE_ENV=development node app/app.js` or to simply start it with `npm start`.
+
+## Testing
+
+Tests are located under `/test` directory and are separated into modules they aim to test. *Note: tests only cover "public" functions of modules.*
+
+Test execution depends on [Mocha](http://mochajs.org/) -- a feature-rich JavaScript test framework running on Node.js.
+
+To install Mocha:
+
+    npm install -g mocha
+
+To start the tests:
+
+    npm test
+
 
 ## License
 
