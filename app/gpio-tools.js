@@ -74,17 +74,61 @@ var init = function() {
 };
 
 var getTempLiving = function(last_temp_living, cb) {
+  if (config.use_average_temp) {
+    // workaround to keep same external values
+    getAvgTemp(last_temp_living, cb);
+  } else {
+    getTempLivingInternal(last_temp_living, cb);
+  }
+};
+
+function getTempLivingInternal(last_temp_living, cb) {
   logger.info('gpio-tools.getTempLiving()', last_temp_living);
-  var readStr = "cat /sys/bus/w1/devices/" + tempLivingSensorId + "/w1_slave";
-  // var readStr = "/opt/owfs/bin/owread " + tempLivingSensorId + "/temperature";
+  getTempReadout(tempLivingSensorId, last_temp_living, cb);
+};
+
+var getTempPlay = function(last_temp_play, cb) {
+  logger.info('gpio-tools.getTempPlay()', last_temp_play);
+  getTempReadout(tempPlaySensorId, last_temp_play, cb);
+};
+
+function getAvgTemp(last_temp_avg, cb) {
+  logger.info('gpio-tools.getAvgTemp()', last_temp_avg);
+
+  async.parallel({
+      temp_living: function(callback) {
+        getTempLivingInternal(last_temp_avg, function(temp_living) {
+          callback(null, temp_living);
+        });
+      },
+      temp_play: function(callback) {
+        getTempPlay(last_temp_avg, function(temp_play) {
+          callback(null, temp_play);
+        });
+      },
+    },
+    function(err, results) {
+      // results will be an object: {temp_living: 1, temp_play: 2}
+      var avg_temp = (results.temp_living + results.temp_play) / 2;
+      avg_temp = parseFloat(avg_temp.toFixed(1));
+      logger.debug('  avg_temp=', avg_temp);
+      cb(avg_temp);
+    });
+};
+
+function getTempReadout(sensor_id, last_temp, cb) {
+  logger.info('gpio-tools.getTempReadout()');
+
+  var readStr = "cat /sys/bus/w1/devices/" + sensor_id + "/w1_slave";
+  // var readStr = "/opt/owfs/bin/owread " + sensor_id + "/temperature";
 
   var bus = true; // else master
 
-  var tempLiving;
+  var tempReadout;
   execute(readStr, function(out, err) {
     if (err) {
       logger.error(err);
-      tempLiving = last_temp_living;
+      tempReadout = last_temp;
     } else {
       try {
         if (bus) {
@@ -93,7 +137,7 @@ var getTempLiving = function(last_temp_living, cb) {
 
           if (lines == null || lines.length != 3) {
             logger.error('Wrong sensor readout format.');
-            tempLiving = last_temp_living;
+            tempReadout = last_temp;
           } else {
             var crc_OK = lines[0].substring(lines[0].length - 3) == "YES";
             // logger.debug('  crc=', crc_OK);
@@ -103,20 +147,20 @@ var getTempLiving = function(last_temp_living, cb) {
               // logger.debug('  temp=', temp);
 
               if (!isNaN(temp)) {
-                tempLiving = parseFloat((temp / 1000).toFixed(1));
-                logger.debug('  tempLiving=', tempLiving);
+                tempReadout = parseFloat((temp / 1000).toFixed(1));
+                logger.debug('  tempReadout=', tempReadout);
 
-                if (tempLiving < 1 || tempLiving > 30) {
+                if (tempReadout < 1 || tempReadout > 30) {
                   logger.error('Value outside of reasonable range.');
-                  tempLiving = last_temp_living;
+                  tempReadout = last_temp;
                 }
               } else {
                 logger.error('Temperature value not a number.');
-                tempLiving = last_temp_living;
+                tempReadout = last_temp;
               }
             } else {
               logger.error('Sensor readout CRC failed.');
-              tempLiving = last_temp_living;
+              tempReadout = last_temp;
             }
           }
         } else {
@@ -125,26 +169,26 @@ var getTempLiving = function(last_temp_living, cb) {
           // logger.debug('  temp=', temp);
 
           if (!isNaN(temp)) {
-            tempLiving = parseFloat((temp * 1).toFixed(1));
-            logger.debug('  tempLiving=', tempLiving);
+            tempReadout = parseFloat((temp * 1).toFixed(1));
+            logger.debug('  tempReadout=', tempReadout);
 
-            if (tempLiving < 1 || tempLiving > 30) {
+            if (tempReadout < 1 || tempReadout > 30) {
               logger.error('Value outside of reasonable range.');
-              tempLiving = last_temp_living;
+              tempReadout = last_temp;
             }
           } else {
             logger.error('Temperature value not a number.');
-            tempLiving = last_temp_living;
+            tempReadout = last_temp;
           }
         }
       } catch (exception) {
         logger.error('Exception caught while parsing: ', exception);
-        tempLiving = last_temp_living;
+        tempReadout = last_temp;
       }
     }
 
     if (typeof(cb) == "function") {
-      cb(tempLiving);
+      cb(tempReadout);
     }
   });
 };
@@ -299,6 +343,7 @@ var exitGracefully = function(cb) {
 
 exports.init = init;
 exports.getTempLiving = getTempLiving;
+exports.getTempPlay = getTempPlay;
 exports.getHeaterState = getHeaterState;
 exports.regulateHeating = regulateHeating;
 exports.switchHeating = switchHeating;

@@ -33,6 +33,8 @@ var scrobble_data_online = false;
 
 var allow_unauthenticated_lan = true;
 
+var use_average_temp = true;
+
 var regulate_interval = 30000; // 30.000 = 30 s
 var collect_record_interval = 120000; // 120.000 = 2 min
 var delay_pump_off = 300000; // 300.000 = 5 min
@@ -460,6 +462,15 @@ Object.defineProperty(exports, "allow_unauthenticated_lan", {
   },
   set: function(value) {
     logger.warn('Attempt to change read-only variable: "config.allow_unauthenticated_lan"!');
+  }
+});
+
+Object.defineProperty(exports, "use_average_temp", {
+  get: function() {
+    return use_average_temp;
+  },
+  set: function(value) {
+    logger.warn('Attempt to change read-only variable: "config.use_average_temp"!');
   }
 });
 

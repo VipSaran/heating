@@ -1,6 +1,6 @@
 {
   "name": "heating",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "author": "Robert Saric <robert.saric@gmail.com>",
   "scripts": {
     "start": "NODE_ENV=development node app/app.js",

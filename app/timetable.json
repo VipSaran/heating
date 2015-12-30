@@ -23,7 +23,7 @@
   "weekend": [{
     "name": "morning",
     "from": [8, 30],
-    "temp": 21
+    "temp": 20
   }, {
     "name": "forenoon",
     "from": [9, 30],
